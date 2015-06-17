@@ -1,0 +1,15 @@
+# Standard Python stuff
+*.egg-info/
+*.py[cod]
+.coverage*
+__pycache__/
+build/
+dist/
+docs/_build/
+venv/
+
+# OS and IDE specific stuff
+*.iml
+.DS_Store
+.idea/
+sftp-config.json
