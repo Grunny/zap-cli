@@ -60,7 +60,7 @@ def zap_error_handler():
 @click.option('--verbose', '-v', is_flag=True, default=False, type=bool,
               help='Add more verbose debugging output.')
 @click.option('--zap-path', envvar='ZAP_PATH', type=str,
-              help='Path to the ZAP daemon.')
+              help='Path to the ZAP daemon. Defaults to the value of the environment variable ZAP_PATH.')
 @click.option('--port', '-p', default=8090, envvar='ZAP_PORT', type=int,
               help='Port of the ZAP proxy. Defaults to 8090 or the value of the environment variable ZAP_PORT.')
 @click.option('--zap-url', default='http://127.0.0.1', envvar='ZAP_URL', type=str,
