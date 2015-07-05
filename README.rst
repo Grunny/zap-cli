@@ -36,6 +36,8 @@ ZAP CLI can then be used with the following commands:
                           the environment variable ZAP_PORT.
       --zap-url TEXT      The URL of the ZAP proxy. Defaults to http://127.0.0.1
                           or the value of the environment variable ZAP_URL.
+      --api-key TEXT      The API key for using the ZAP API if required. Defaults
+                          to the value of the environment variable ZAP_API_KEY.
       --help              Show this message and exit.
 
     Commands:

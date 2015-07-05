@@ -66,8 +66,11 @@ def zap_error_handler():
 @click.option('--zap-url', default='http://127.0.0.1', envvar='ZAP_URL', type=str,
               help='The URL of the ZAP proxy. Defaults to http://127.0.0.1 or the value of the environment ' +
               'variable ZAP_URL.')
+@click.option('--api-key', default='', envvar='ZAP_API_KEY', type=str,
+              help='The API key for using the ZAP API if required. Defaults to the value of the environment ' +
+              'variable ZAP_API_KEY.')
 @click.pass_context
-def cli(ctx, boring, verbose, zap_path, port, zap_url):
+def cli(ctx, boring, verbose, zap_path, port, zap_url, api_key):
     """Main command line entry point."""
     console.colorize = not boring
 
@@ -76,7 +79,7 @@ def cli(ctx, boring, verbose, zap_path, port, zap_url):
     else:
         console.setLevel('INFO')
 
-    ctx.obj = ZAPHelper(zap_path=zap_path, port=port, url=zap_url)
+    ctx.obj = ZAPHelper(zap_path=zap_path, port=port, url=zap_url, api_key=api_key)
 
 
 @cli.command('start', short_help='Start the ZAP daemon.')
@@ -101,8 +104,7 @@ def shutdown_zap_daemon(zap_helper):
 @click.pass_obj
 def new_session(zap_helper):
     """Start a new session."""
-    console.debug('Starting a new session')
-    zap_helper.zap.core.new_session()
+    zap_helper.new_session()
 
 
 @cli.command('save-session')
@@ -110,8 +112,7 @@ def new_session(zap_helper):
 @click.pass_obj
 def save_session(zap_helper, file_path):
     """Save the session."""
-    console.debug('Saving the session to "{0}"'.format(file_path))
-    zap_helper.zap.core.save_session(file_path, overwrite='true')
+    zap_helper.save_session(file_path)
 
 
 @cli.command('load-session')
@@ -119,8 +120,8 @@ def save_session(zap_helper, file_path):
 @click.pass_obj
 def load_session(zap_helper, file_path):
     """Load a given session."""
-    console.debug('Loading session from "{0}"'.format(file_path))
-    zap_helper.zap.core.load_session(file_path)
+    with zap_error_handler():
+        zap_helper.load_session(file_path)
 
 
 @cli.command('open-url')
@@ -263,13 +264,11 @@ def active_scanners(zap_helper, action, scanners):
     scanner_list = filter_by_ids(zap_helper.zap.ascan.scanners(), scanner_list)
 
     if action == 'enable':
-        filtered_scanner_ids = ','.join([s['id'] for s in scanner_list])
-        console.debug('Enabling scanners: {0}'.format(filtered_scanner_ids))
-        zap_helper.zap.ascan.enable_scanners(filtered_scanner_ids)
+        filtered_scanner_ids = [s['id'] for s in scanner_list]
+        zap_helper.enable_scanners_by_ids(filtered_scanner_ids)
     elif action == 'disable':
-        filtered_scanner_ids = ','.join([s['id'] for s in scanner_list])
-        console.debug('Disabling scanners: {0}'.format(filtered_scanner_ids))
-        zap_helper.zap.ascan.disable_scanners(filtered_scanner_ids)
+        filtered_scanner_ids = [s['id'] for s in scanner_list]
+        zap_helper.disable_scanners_by_ids(filtered_scanner_ids)
     else:
         click.echo(tabulate([[s['id'], s['name'], s['policyId'], s['enabled'], s['attackStrength']]
                              for s in scanner_list],
@@ -297,9 +296,8 @@ def active_scan_policies(zap_helper, action, policy_ids):
     policies = filter_by_ids(zap_helper.zap.ascan.policies(), policy_ids)
 
     if action == 'enable':
-        filtered_policy_ids = ','.join([p['id'] for p in policies])
-        console.debug('Setting enabled policies: {0}'.format(filtered_policy_ids))
-        zap_helper.zap.ascan.set_enabled_policies(filtered_policy_ids)
+        filtered_policy_ids = [p['id'] for p in policies]
+        zap_helper.enable_policies_by_ids(filtered_policy_ids)
     else:
         click.echo(tabulate([[p['id'], p['name'], p['enabled'], p['attackStrength']]
                              for p in policies],
