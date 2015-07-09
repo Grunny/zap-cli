@@ -19,9 +19,10 @@ from zapcli.exceptions import ZAPError
 @ddt
 class ZAPHelperTestCase(unittest.TestCase):
     """Test ZAP Helper methods."""
+    api_key = '123'
 
     def setUp(self):
-        self.zap_helper = zap_helper.ZAPHelper()
+        self.zap_helper = zap_helper.ZAPHelper(api_key=self.api_key)
 
     @patch('subprocess.Popen')
     def test_start_successful(self, popen_mock):
@@ -270,7 +271,7 @@ class ZAPHelperTestCase(unittest.TestCase):
     def test_enable_scanners_by_group(self, ascan_mock):
         """Test enabling a scanners by group name."""
         self.zap_helper.enable_scanners_by_group('xss')
-        ascan_mock.assert_called_with(','.join(self.zap_helper.scanner_group_map['xss']))
+        ascan_mock.assert_called_with(','.join(self.zap_helper.scanner_group_map['xss']), apikey=self.api_key)
 
     @patch('zapv2.ascan.enable_all_scanners')
     def test_enable_scanners_by_group_all(self, ascan_mock):
@@ -296,8 +297,8 @@ class ZAPHelperTestCase(unittest.TestCase):
         self.assertTrue(disable_mock.called)
         self.assertFalse(enable_all_mock.called)
         self.assertEqual(enable_mock.call_count, 2)
-        enable_mock.assert_any_call(','.join(self.zap_helper.scanner_group_map['xss']))
-        enable_mock.assert_any_call('0,50000')
+        enable_mock.assert_any_call(','.join(self.zap_helper.scanner_group_map['xss']), apikey=self.api_key)
+        enable_mock.assert_any_call('0,50000', apikey=self.api_key)
 
     @patch('zapv2.ascan.disable_all_scanners')
     @patch('zapv2.ascan.enable_all_scanners')
@@ -306,6 +307,12 @@ class ZAPHelperTestCase(unittest.TestCase):
         """Test enabling scanners by group(s) and/or ID(s)."""
         with self.assertRaises(ZAPError):
             self.zap_helper.enable_scanners('invalid-group')
+
+    @patch('zapv2.ascan.set_enabled_policies')
+    def test_enable_policies_by_ids(self, policies_mock):
+        """Test enabling scanners by a list of IDs."""
+        self.zap_helper.enable_policies_by_ids(['1', '5', '6'])
+        policies_mock.assert_called_with('1,5,6', apikey=self.api_key)
 
     @patch('zapv2.core.exclude_from_proxy')
     @patch('zapv2.spider.exclude_from_scan')
@@ -316,9 +323,9 @@ class ZAPHelperTestCase(unittest.TestCase):
 
         self.zap_helper.exclude_from_all(exclude_pattern)
 
-        core_mock.assert_called_with(exclude_pattern)
-        spider_mock.assert_called_with(exclude_pattern)
-        ascan_mock.assert_called_with(exclude_pattern)
+        core_mock.assert_called_with(exclude_pattern, apikey=self.api_key)
+        spider_mock.assert_called_with(exclude_pattern, apikey=self.api_key)
+        ascan_mock.assert_called_with(exclude_pattern, apikey=self.api_key)
 
     def test_exclude_from_all_raises_eror(self):
         """
@@ -328,6 +335,40 @@ class ZAPHelperTestCase(unittest.TestCase):
         exclude_pattern = '['
         with self.assertRaises(ZAPError):
             self.zap_helper.exclude_from_all(exclude_pattern)
+
+    @patch('zapv2.core.new_session')
+    def test_new_session(self, session_mock):
+        """Test starting a new session."""
+        self.zap_helper.new_session()
+        session_mock.assert_called_with(apikey=self.api_key)
+
+    @patch('zapv2.core.save_session')
+    def test_save_session(self, session_mock):
+        """Test saving the current session."""
+        file_path = '/path/to/zap'
+        self.zap_helper.save_session(file_path)
+        session_mock.assert_called_with(file_path, overwrite='true', apikey=self.api_key)
+
+    @patch('os.path.isfile')
+    @patch('zapv2.core.load_session')
+    def test_load_session(self, session_mock, isfile_mock):
+        """Test loading a given session."""
+        isfile_mock.return_value = True
+        file_path = '/path/to/zap'
+        self.zap_helper.load_session(file_path)
+        session_mock.assert_called_with(file_path, apikey=self.api_key)
+
+    @patch('os.path.isfile')
+    @patch('zapv2.core.load_session')
+    def test_load_session_error(self, session_mock, isfile_mock):
+        """
+        Test loading a given session raises an error if the file
+        doesn't exist.
+        """
+        isfile_mock.return_value = False
+        file_path = '/path/to/zap'
+        with self.assertRaises(ZAPError):
+            self.zap_helper.load_session(file_path)
 
 
 if __name__ == '__main__':

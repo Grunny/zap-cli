@@ -36,11 +36,12 @@ class ZAPHelper(object):
 
     timeout = 60
 
-    def __init__(self, zap_path='', port=8090, url='http://127.0.0.1', logger=None):
+    def __init__(self, zap_path='', port=8090, url='http://127.0.0.1', api_key='', logger=None):
         self.zap_path = zap_path
         self.port = port
         self.proxy_url = '{0}:{1}'.format(url, self.port)
         self.zap = ZAPv2(proxies={'http': self.proxy_url, 'https': self.proxy_url})
+        self.api_key = api_key
         self.logger = logger or console
 
     @property
@@ -83,7 +84,7 @@ class ZAPHelper(object):
             return
 
         self.logger.debug('Shutting down ZAP.')
-        self.zap.core.shutdown()
+        self.zap.core.shutdown(apikey=self.api_key)
 
         timeout_time = time.time() + self.timeout
         while self.is_running():
@@ -115,7 +116,7 @@ class ZAPHelper(object):
         """Run an active scan against a URL."""
         self.logger.debug('Spidering target {0}...'.format(target_url))
 
-        self.zap.spider.scan(target_url)
+        self.zap.spider.scan(target_url, apikey=self.api_key)
 
         while int(self.zap.spider.status()) < 100:
             self.logger.debug('Spider progress %: {0}'.format(self.zap.spider.status()))
@@ -127,7 +128,7 @@ class ZAPHelper(object):
         """Run an active scan against a URL."""
         self.logger.debug('Scanning target {0}...'.format(target_url))
 
-        scan_id = self.zap.ascan.scan(target_url, recurse=recursive)
+        scan_id = self.zap.ascan.scan(target_url, recurse=recursive, apikey=self.api_key)
 
         if not scan_id:
             raise ZAPError('Error running active scan.')
@@ -163,7 +164,13 @@ class ZAPHelper(object):
         """Enable a list of scanner IDs."""
         scanner_ids = ','.join(scanner_ids)
         self.logger.debug('Enabling scanners with IDs {0}'.format(scanner_ids))
-        return self.zap.ascan.enable_scanners(scanner_ids)
+        return self.zap.ascan.enable_scanners(scanner_ids, apikey=self.api_key)
+
+    def disable_scanners_by_ids(self, scanner_ids):
+        """Disable a list of scanner IDs."""
+        scanner_ids = ','.join(scanner_ids)
+        self.logger.debug('Disabling scanners with IDs {0}'.format(scanner_ids))
+        return self.zap.ascan.disable_scanners(scanner_ids, apikey=self.api_key)
 
     def enable_scanners_by_group(self, group):
         """
@@ -171,7 +178,7 @@ class ZAPHelper(object):
         """
         if group == 'all':
             self.logger.debug('Enabling all scanners')
-            return self.zap.ascan.enable_all_scanners()
+            return self.zap.ascan.enable_all_scanners(apikey=self.api_key)
 
         try:
             scanner_list = self.scanner_group_map[group]
@@ -190,7 +197,7 @@ class ZAPHelper(object):
         Set only the provided scanners by group and/or IDs and disable all others.
         """
         self.logger.debug('Disabling all current scanners')
-        self.zap.ascan.disable_all_scanners()
+        self.zap.ascan.disable_all_scanners(apikey=self.api_key)
 
         scanner_ids = []
         for scanner in scanners:
@@ -204,6 +211,12 @@ class ZAPHelper(object):
         if scanner_ids:
             self.enable_scanners_by_ids(scanner_ids)
 
+    def enable_policies_by_ids(self, policy_ids):
+        """Set enabled policy from a list of IDs."""
+        policy_ids = ','.join(policy_ids)
+        self.logger.debug('Setting enabled policies to IDs {0}'.format(policy_ids))
+        self.zap.ascan.set_enabled_policies(policy_ids, apikey=self.api_key)
+
     def exclude_from_all(self, exclude_regex):
         """Exclude a pattern from proxy, spider and active scanner."""
         try:
@@ -213,6 +226,23 @@ class ZAPHelper(object):
 
         self.logger.debug('Excluding {0} from proxy, spider and active scanner.'.format(exclude_regex))
 
-        self.zap.core.exclude_from_proxy(exclude_regex)
-        self.zap.spider.exclude_from_scan(exclude_regex)
-        self.zap.ascan.exclude_from_scan(exclude_regex)
+        self.zap.core.exclude_from_proxy(exclude_regex, apikey=self.api_key)
+        self.zap.spider.exclude_from_scan(exclude_regex, apikey=self.api_key)
+        self.zap.ascan.exclude_from_scan(exclude_regex, apikey=self.api_key)
+
+    def new_session(self):
+        """Start a new session."""
+        self.logger.debug('Starting a new session')
+        self.zap.core.new_session(apikey=self.api_key)
+
+    def save_session(self, file_path):
+        """Save the current session."""
+        self.logger.debug('Saving the session to "{0}"'.format(file_path))
+        self.zap.core.save_session(file_path, overwrite='true', apikey=self.api_key)
+
+    def load_session(self, file_path):
+        """Load a given session."""
+        if not os.path.isfile(file_path):
+            raise ZAPError('No file found at "{0}", cannot load session.'.format(file_path))
+        self.logger.debug('Loading session from "{0}"'.format(file_path))
+        self.zap.core.load_session(file_path, apikey=self.api_key)
