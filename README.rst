@@ -54,3 +54,21 @@ ZAP CLI can then be used with the following commands:
       shutdown      Shutdown the ZAP daemon.
       spider        Run the spider against a URL.
       start         Start the ZAP daemon.
+
+You can use ``--help`` with any of the subcommands to get information on how to use
+them.
+
+As an example, to run a quick scan of a URL that will open and spider the URL, scan
+recursively, exclude URLs matching a given regex, and only use XSS and SQLi scanners,
+you could run:
+
+::
+
+    $ zap-cli quick-scan -s xss,sqli --spider -r -e "some_regex_pattern" http://127.0.0.1/
+    [INFO]            Running a quick scan for http://127.0.0.1/
+    [INFO]            Issues found: 1
+    +----------------------------------+--------+----------+---------------------------------------------------------------------------------+
+    | Alert                            | Risk   |   CWE ID | URL                                                                             |
+    +==================================+========+==========+=================================================================================+
+    | Cross Site Scripting (Reflected) | High   |       79 | http://127.0.0.1/index.php?foo=%22%3E%3Cscript%3Ealert%281%29%3B%3C%2Fscript%3E |
+    +----------------------------------+--------+----------+---------------------------------------------------------------------------------+
