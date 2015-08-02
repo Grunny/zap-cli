@@ -151,7 +151,7 @@ def spider_url(zap_helper, url):
 @click.option('--recursive', '-r', is_flag=True, default=False, help='Make scan recursive.')
 @click.pass_obj
 def active_scan(zap_helper, url, scanners, recursive):
-    """Run an Active Scan attack and report any alerts found."""
+    """Run an Active Scan against a URL."""
     console.info('Running an active scan...')
 
     with zap_error_handler():
@@ -235,7 +235,7 @@ def quick_scan(zap_helper, url, **options):
     sys.exit(num_alerts)
 
 
-@cli.command('scanners')
+@cli.command('scanners', short_help='Enable, disable, or list a set of scanners.')
 @click.option('--list', 'action', flag_value='list', default=True,
               help='List the selected scanners (this is the default if no flag is passed).')
 @click.option('--enable', 'action', flag_value='enable',
@@ -276,7 +276,7 @@ def active_scanners(zap_helper, action, scanners):
                             tablefmt='grid'))
 
 
-@cli.command('policies')
+@cli.command('policies', short_help='Enable or list a set of policies.')
 @click.option('--list', 'action', flag_value='list', default=True,
               help='List the selected policies (this is the default if no flag is passed).')
 @click.option('--enable', 'action', flag_value='enable',

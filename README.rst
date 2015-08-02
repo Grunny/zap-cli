@@ -17,7 +17,9 @@ Usage
 To use ZAP CLI, you need to set the port ZAP runs on (defaults to 8090) and
 the path to the folder in which ZAP is installed. These can be set either as
 commandline parameters or with the environment variables ``ZAP_PORT`` and
-``ZAP_PATH``.
+``ZAP_PATH``. If you have an API key set for ZAP, this can likewise be set
+either as a commandline parameter or with the ``ZAP_API_KEY`` environment
+variable.
 
 ZAP CLI can then be used with the following commands:
 
@@ -47,10 +49,10 @@ ZAP CLI can then be used with the following commands:
       load-session  Load a given session.
       new-session   Start a new session.
       open-url      Open a URL using the ZAP proxy.
-      policies      Get a list of policies and whether or not...
+      policies      Enable or list a set of policies.
       quick-scan    Run a quick scan.
       save-session  Save the session.
-      scanners      Get a list of scanners and whether or not...
+      scanners      Enable, disable, or list a set of scanners.
       shutdown      Shutdown the ZAP daemon.
       spider        Run the spider against a URL.
       start         Start the ZAP daemon.
