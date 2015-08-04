@@ -7,9 +7,16 @@ executing quick, targeted attacks.
 Installation
 ============
 
-To install ZAP CLI while it's under development, clone this repository
-and then run ``pip install -e .``. To include the development
-dependencies in order to run unit tests, use ``pip install -e .[dev]``.
+To install the latest development version of ZAP CLI, you can run the
+following:
+
+::
+
+    pip install --upgrade git+https://github.com/Grunny/zap-cli.git
+
+To install ZAP CLI for development, including the dependencies needed
+in order to run unit tests, clone this repository and use
+``pip install -e .[dev]``.
 
 Usage
 =====
