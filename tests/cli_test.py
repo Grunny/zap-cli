@@ -26,7 +26,7 @@ class ZAPCliTestCase(unittest.TestCase):
     @patch('zapcli.zap_helper.ZAPHelper.start')
     def test_start_zap_daemon(self, helper_mock):
         """Test command to start ZAP daemon."""
-        result = self.runner.invoke(cli.cli, ['--boring', 'start'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'start'])
         helper_mock.assert_called_with()
         self.assertEqual(result.exit_code, 0)
 
@@ -34,14 +34,14 @@ class ZAPCliTestCase(unittest.TestCase):
     def test_start_zap_daemon_exception(self, helper_mock):
         """Test command to start ZAP daemon has an exit code of 1 when an exception is raised."""
         helper_mock.side_effect = ZAPError('error')
-        result = self.runner.invoke(cli.cli, ['--boring', 'start'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'start'])
         helper_mock.assert_called_with()
         self.assertEqual(result.exit_code, 1)
 
     @patch('zapcli.zap_helper.ZAPHelper.shutdown')
     def test_shutdown_zap_daemon(self, helper_mock):
         """Test command to shutdown ZAP daemon."""
-        result = self.runner.invoke(cli.cli, ['--boring', 'shutdown'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'shutdown'])
         helper_mock.assert_called_with()
         self.assertEqual(result.exit_code, 0)
 
@@ -49,35 +49,35 @@ class ZAPCliTestCase(unittest.TestCase):
     def test_shutdown_zap_daemon_exception(self, helper_mock):
         """Test command to shutdown ZAP daemon has an exit code of 1 when an exception is raised."""
         helper_mock.side_effect = ZAPError('error')
-        result = self.runner.invoke(cli.cli, ['--boring', 'shutdown'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'shutdown'])
         helper_mock.assert_called_with()
         self.assertEqual(result.exit_code, 1)
 
     @patch('zapcli.zap_helper.ZAPHelper.open_url')
     def test_open_url(self, helper_mock):
         """Test open URL method."""
-        result = self.runner.invoke(cli.cli, ['--boring', 'open-url', 'http://localhost/'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'open-url', 'http://localhost/'])
         helper_mock.assert_called_with('http://localhost/')
         self.assertEqual(result.exit_code, 0)
 
     @patch('zapcli.zap_helper.ZAPHelper.open_url')
     def test_open_url_no_url(self, helper_mock):
         """Test open URL method isn't called and an error status raised when no URL provided."""
-        result = self.runner.invoke(cli.cli, ['--boring', 'open-url'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'open-url'])
         self.assertFalse(helper_mock.called)
         self.assertEqual(result.exit_code, 2)
 
     @patch('zapcli.zap_helper.ZAPHelper.run_spider')
     def test_spider_url(self, helper_mock):
         """Test spider URL method."""
-        result = self.runner.invoke(cli.cli, ['--boring', 'spider', 'http://localhost/'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'spider', 'http://localhost/'])
         helper_mock.assert_called_with('http://localhost/')
         self.assertEqual(result.exit_code, 0)
 
     @patch('zapcli.zap_helper.ZAPHelper.run_spider')
     def test_spider_url_no_url(self, helper_mock):
         """Test spider URL method isn't called and an error status raised when no URL provided."""
-        result = self.runner.invoke(cli.cli, ['--boring', 'spider'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'spider'])
         self.assertFalse(helper_mock.called)
         self.assertEqual(result.exit_code, 2)
 
@@ -89,8 +89,8 @@ class ZAPCliTestCase(unittest.TestCase):
         class_mock.alerts.return_value = []
         helper_mock.return_value = class_mock
 
-        result = self.runner.invoke(cli.cli, ['--boring', '--verbose', 'quick-scan', 'http://localhost/',
-                                              '--self-contained', '--scanners', 'xss',
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'quick-scan',
+                                              'http://localhost/', '--self-contained', '--scanners', 'xss',
                                               '--spider', '--exclude', 'pattern'])
         self.assertEqual(result.exit_code, 0)
 
@@ -101,8 +101,8 @@ class ZAPCliTestCase(unittest.TestCase):
         class_mock.start.side_effect = ZAPError('error')
         helper_mock.return_value = class_mock
 
-        result = self.runner.invoke(cli.cli, ['--boring', '--verbose', 'quick-scan', 'http://localhost/',
-                                              '--self-contained'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'quick-scan',
+                                              'http://localhost/', '--self-contained'])
         self.assertEqual(result.exit_code, 1)
 
     @patch.object(zap_helper.ZAPHelper, '__new__')
@@ -113,8 +113,8 @@ class ZAPCliTestCase(unittest.TestCase):
         class_mock.shutdown.side_effect = ZAPError('error')
         helper_mock.return_value = class_mock
 
-        result = self.runner.invoke(cli.cli, ['--boring', '--verbose', 'quick-scan', 'http://localhost/',
-                                              '--self-contained'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'quick-scan',
+                                              'http://localhost/', '--self-contained'])
         self.assertEqual(result.exit_code, 1)
 
     @patch.object(zap_helper.ZAPHelper, '__new__')
@@ -126,8 +126,8 @@ class ZAPCliTestCase(unittest.TestCase):
         class_mock.enable_scanners.side_effect = ZAPError('error')
         helper_mock.return_value = class_mock
 
-        result = self.runner.invoke(cli.cli, ['--boring', '--verbose', 'quick-scan', 'http://localhost/',
-                                              '--scanners', 'xss'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'quick-scan',
+                                              'http://localhost/', '--scanners', 'xss'])
         self.assertEqual(result.exit_code, 1)
 
     @patch.object(zap_helper.ZAPHelper, '__new__')
@@ -138,8 +138,8 @@ class ZAPCliTestCase(unittest.TestCase):
         class_mock.exclude_from_all.side_effect = ZAPError('error')
         helper_mock.return_value = class_mock
 
-        result = self.runner.invoke(cli.cli, ['--boring', '--verbose', 'quick-scan', 'http://localhost/',
-                                              '--exclude', 'pattern'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'quick-scan',
+                                              'http://localhost/', '--exclude', 'pattern'])
         self.assertEqual(result.exit_code, 1)
 
     @patch.object(zapv2.ascan, '__new__')
@@ -149,7 +149,7 @@ class ZAPCliTestCase(unittest.TestCase):
         class_mock.scanners.return_value = [{'id': '1'}, {'id': '5'}, {'id': '10'}]
         ascan_mock.return_value = class_mock
 
-        result = self.runner.invoke(cli.cli, ['--boring', '--verbose', 'scanners', '--enable',
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'scanners', '--enable',
                                               '--scanners', '1,2,3'])
         class_mock.enable_scanners.assert_called_with('1', apikey='')
 
@@ -160,7 +160,7 @@ class ZAPCliTestCase(unittest.TestCase):
         class_mock.scanners.return_value = [{'id': '1'}, {'id': '5'}, {'id': '10'}]
         ascan_mock.return_value = class_mock
 
-        result = self.runner.invoke(cli.cli, ['--boring', '--verbose', 'scanners', '--disable',
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'scanners', '--disable',
                                               '--scanners', '1,2,3'])
         class_mock.disable_scanners.assert_called_with('1', apikey='')
 
@@ -171,14 +171,14 @@ class ZAPCliTestCase(unittest.TestCase):
         class_mock.policies.return_value = [{'id': '1'}, {'id': '5'}, {'id': '10'}]
         ascan_mock.return_value = class_mock
 
-        result = self.runner.invoke(cli.cli, ['--boring', '--verbose', 'policies', '--enable',
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'policies', '--enable',
                                               '--policy-ids', '1,2,3'])
         class_mock.set_enabled_policies.assert_called_with('1', apikey='')
 
     @patch('zapcli.zap_helper.ZAPHelper.exclude_from_all')
     def test_exclude_from_scanners(self, helper_mock):
         """Test exclude from scanners command."""
-        result = self.runner.invoke(cli.cli, ['--boring', 'exclude', 'pattern'])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'exclude', 'pattern'])
         helper_mock.assert_called_with('pattern')
         self.assertEqual(result.exit_code, 0)
 
@@ -186,7 +186,7 @@ class ZAPCliTestCase(unittest.TestCase):
     def test_exclude_from_scanners_error(self, helper_mock):
         """Test exclude from scanners command with error raised."""
         helper_mock.side_effect = ZAPError('error')
-        result = self.runner.invoke(cli.cli, ['--boring', 'exclude', '['])
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'exclude', '['])
         helper_mock.assert_called_with('[')
         self.assertEqual(result.exit_code, 1)
 
