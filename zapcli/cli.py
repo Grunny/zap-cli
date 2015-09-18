@@ -2,66 +2,18 @@
 ZAP CLI.
 """
 
-from contextlib import contextmanager
-import json
 import sys
 
 import click
-from tabulate import tabulate
 
 from zapcli import __version__
-from zapcli.exceptions import ZAPError
+from zapcli import helpers
+from zapcli.commands.policies import policies_group
+from zapcli.commands.scanners import scanner_group
+from zapcli.commands.scripts import scripts_group
+from zapcli.commands.session import session_group
 from zapcli.log import console
 from zapcli.zap_helper import ZAPHelper
-
-
-def validate_ids(ctx, param, value):
-    """Validate a list of IDs and convert them to a list."""
-    if not value:
-        return None
-
-    ids = [x.strip() for x in value.split(',')]
-    for id_item in ids:
-        if not id_item.isdigit():
-            raise click.BadParameter('Non-numeric value "{0}" provided for an ID.'.format(id_item))
-
-    return ids
-
-
-def validate_scanner_list(ctx, param, value):
-    """
-    Validate a comma-separated list of scanners and extract it into a list of groups and IDs.
-    """
-    if not value:
-        return None
-
-    valid_groups = ctx.obj.scanner_groups
-    scanners = [x.strip() for x in value.split(',')]
-
-    if 'all' in scanners:
-        return ['all']
-
-    scanner_ids = []
-    for scanner in scanners:
-        if scanner.isdigit():
-            scanner_ids.append(scanner)
-        elif scanner in valid_groups:
-            scanner_ids += ctx.obj.scanner_group_map[scanner]
-        else:
-            raise click.BadParameter('Invalid scanner "{0}" provided. Must be a valid group or numeric ID.'
-                                     .format(scanner))
-
-    return scanner_ids
-
-
-@contextmanager
-def zap_error_handler():
-    """Context manager to handle ZAPError exceptions in a standard way."""
-    try:
-        yield
-    except ZAPError as ex:
-        console.error(str(ex))
-        sys.exit(1)
 
 
 @click.group(help='ZAP CLI v{0} - A simple commandline tool for OWASP ZAP.'.format(__version__))
@@ -98,7 +50,7 @@ def cli(ctx, boring, verbose, zap_path, port, zap_url, api_key):
 def start_zap_daemon(zap_helper, start_options):
     """Helper to start the daemon using the current config."""
     console.info('Starting ZAP daemon')
-    with zap_error_handler():
+    with helpers.zap_error_handler():
         zap_helper.start(options=start_options)
 
 
@@ -107,7 +59,7 @@ def start_zap_daemon(zap_helper, start_options):
 def shutdown_zap_daemon(zap_helper):
     """Shutdown the ZAP daemon."""
     console.info('Shutting down ZAP daemon')
-    with zap_error_handler():
+    with helpers.zap_error_handler():
         zap_helper.shutdown()
 
 
@@ -129,7 +81,7 @@ def check_status(zap_helper, timeout):
     Exits with code 1 if ZAP is either not running or the command timed out
     waiting for ZAP to start.
     """
-    with zap_error_handler():
+    with helpers.zap_error_handler():
         if zap_helper.is_running():
             console.info('ZAP is running')
         elif timeout is not None:
@@ -138,37 +90,6 @@ def check_status(zap_helper, timeout):
         else:
             console.error('ZAP is not running')
             sys.exit(1)
-
-
-@cli.group(name='session', short_help='Manage sessions.')
-@click.pass_context
-def session_group(ctx):
-    """Manage sessions."""
-    pass
-
-
-@session_group.command('new')
-@click.pass_obj
-def new_session(zap_helper):
-    """Start a new session."""
-    zap_helper.new_session()
-
-
-@session_group.command('save')
-@click.argument('file-path')
-@click.pass_obj
-def save_session(zap_helper, file_path):
-    """Save the session."""
-    zap_helper.save_session(file_path)
-
-
-@session_group.command('load')
-@click.argument('file-path')
-@click.pass_obj
-def load_session(zap_helper, file_path):
-    """Load a given session."""
-    with zap_error_handler():
-        zap_helper.load_session(file_path)
 
 
 @cli.command('open-url')
@@ -186,7 +107,7 @@ def open_url(zap_helper, url):
 def spider_url(zap_helper, url):
     """Run the spider against a URL."""
     console.info('Running spider...')
-    with zap_error_handler():
+    with helpers.zap_error_handler():
         zap_helper.run_spider(url)
 
 
@@ -201,7 +122,7 @@ def ajax_spider_url(zap_helper, url):
 
 @cli.command('active-scan', short_help='Run an Active Scan.')
 @click.argument('url')
-@click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
+@click.option('--scanners', '-s', type=str, callback=helpers.validate_scanner_list,
               help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
               'subcommand to get a list of IDs. Available groups are: {0}.'.format(
                   ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
@@ -216,7 +137,7 @@ def active_scan(zap_helper, url, scanners, recursive):
     """
     console.info('Running an active scan...')
 
-    with zap_error_handler():
+    with helpers.zap_error_handler():
         if scanners:
             zap_helper.set_enabled_scanners(scanners)
 
@@ -235,7 +156,7 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
     """Show alerts at the given alert level."""
     alerts = zap_helper.alerts(alert_level)
 
-    report_alerts(alerts, output_format)
+    helpers.report_alerts(alerts, output_format)
 
     if exit_code:
         num_alerts = len(alerts)
@@ -247,7 +168,7 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
 @click.option('--self-contained', '-sc', is_flag=True, default=False,
               help='Make the scan self-contained, i.e. start the daemon, open the URL, scan it, ' +
               'and shutdown the daemon when done.')
-@click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
+@click.option('--scanners', '-s', type=str, callback=helpers.validate_scanner_list,
               help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
               'subcommand to get a list of IDs. Available groups are: {0}.'.format(
                   ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
@@ -271,12 +192,12 @@ def quick_scan(zap_helper, url, **options):
     """
     if options['self_contained']:
         console.info('Starting ZAP daemon')
-        with zap_error_handler():
+        with helpers.zap_error_handler():
             zap_helper.start(options['start_options'])
 
     console.info('Running a quick scan for {0}'.format(url))
 
-    with zap_error_handler():
+    with helpers.zap_error_handler():
         if options['scanners']:
             zap_helper.set_enabled_scanners(options['scanners'])
 
@@ -297,113 +218,14 @@ def quick_scan(zap_helper, url, **options):
 
     num_alerts = len(alerts)
 
-    report_alerts(alerts)
+    helpers.report_alerts(alerts)
 
     if options['self_contained']:
         console.info('Shutting down ZAP daemon')
-        with zap_error_handler():
+        with helpers.zap_error_handler():
             zap_helper.shutdown()
 
     sys.exit(num_alerts)
-
-
-@cli.group(name='scanners', short_help='Enable, disable, or list a set of scanners.')
-@click.pass_context
-def scanner_group(ctx):
-    """
-    Get a list of scanners and whether or not they are enabled,
-    or disable/enable scanners to use in the scan.
-    """
-    pass
-
-
-@scanner_group.command('list')
-@click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
-              help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
-              'subcommand to get a list of IDs. Available groups are: {0}.'.format(
-                  ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
-@click.pass_obj
-def list_scanners(zap_helper, scanners):
-    """Get a list of scanners and whether or not they are enabled."""
-    scanner_list = zap_helper.zap.ascan.scanners()
-
-    if scanners is not None and 'all' not in scanners:
-        scanner_list = filter_by_ids(scanner_list, scanners)
-
-    click.echo(tabulate([[s['id'], s['name'], s['policyId'], s['enabled'], s['attackStrength']]
-                         for s in scanner_list],
-                        headers=['ID', 'Name', 'Policy ID', 'Enabled', 'Strength'],
-                        tablefmt='grid'))
-
-
-@scanner_group.command('enable')
-@click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
-              help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
-              'subcommand to get a list of IDs. Available groups are: {0}.'.format(
-                  ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
-@click.pass_obj
-def enable_scanners(zap_helper, scanners):
-    """Enable scanners to use in a scan."""
-    scanners = scanners or ['all']
-    zap_helper.enable_scanners(scanners)
-
-
-@scanner_group.command('disable')
-@click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
-              help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
-              'subcommand to get a list of IDs. Available groups are: {0}.'.format(
-                  ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
-@click.pass_obj
-def disable_scanners(zap_helper, scanners):
-    """Disable scanners so they are not used in a scan."""
-    scanners = scanners or ['all']
-    zap_helper.disable_scanners(scanners)
-
-
-@cli.group(name='policies', short_help='Enable or list a set of policies.')
-@click.pass_context
-def policies_group(ctx):
-    """
-    Get a list of policies and whether or not they are enabled,
-    or set the enabled policies to use in the scan.
-    """
-    pass
-
-
-@policies_group.command('list')
-@click.option('--policy-ids', '-p', type=str, callback=validate_ids,
-              help='Comma separated list of policy IDs to list or enable ' +
-              '(use policies without any to get a list of IDs).')
-@click.pass_obj
-def list_policies(zap_helper, policy_ids):
-    """
-    Get a list of policies and whether or not they are enabled.
-    """
-    policies = filter_by_ids(zap_helper.zap.ascan.policies(), policy_ids)
-
-    click.echo(tabulate([[p['id'], p['name'], p['enabled'], p['attackStrength']]
-                         for p in policies],
-                        headers=['ID', 'Name', 'Enabled', 'Strength'],
-                        tablefmt='grid'))
-
-
-@policies_group.command('enable')
-@click.option('--policy-ids', '-p', type=str, callback=validate_ids,
-              help='Comma separated list of policy IDs to list or enable ' +
-              '(use policies without any to get a list of IDs).')
-@click.pass_obj
-def enable_policies(zap_helper, policy_ids):
-    """
-    Set the enabled policies to use in a scan.
-
-    When you enable a selection of policies, all other policies are
-    disabled.
-    """
-    if not policy_ids:
-        policies = zap_helper.zap.ascan.policies()
-        policy_ids = [p['id'] for p in policies]
-
-    zap_helper.enable_policies_by_ids(policy_ids)
 
 
 @cli.command('exclude', short_help='Exclude a pattern from all scanners.')
@@ -411,89 +233,8 @@ def enable_policies(zap_helper, policy_ids):
 @click.pass_obj
 def exclude_from_scanners(zap_helper, pattern):
     """Exclude a pattern from proxy, spider and active scanner."""
-    with zap_error_handler():
+    with helpers.zap_error_handler():
         zap_helper.exclude_from_all(pattern)
-
-
-@cli.group(name='scripts', short_help='Manage scripts.')
-@click.pass_context
-def scripts_group(ctx):
-    """
-    Get a list of scripts and whether or not they are enabled,
-    load and remove scripts, or disable/enable scripts to use.
-    """
-    pass
-
-
-@scripts_group.command('list')
-@click.pass_obj
-def list_scripts(zap_helper):
-    """List scripts currently loaded into ZAP."""
-    scripts = zap_helper.zap.script.list_scripts
-    output = []
-    for s in scripts:
-        if 'enabled' not in s:
-            s['enabled'] = 'N/A'
-
-        output.append([s['name'], s['type'], s['engine'], s['enabled']])
-
-    click.echo(tabulate(output, headers=['Name', 'Type', 'Engine', 'Enabled'], tablefmt='grid'))
-
-
-@scripts_group.command('list-engines')
-@click.pass_obj
-def list_engines(zap_helper):
-    """List engines that can be used to run scripts."""
-    engines = zap_helper.zap.script.list_engines
-    console.info('Available engines: {}'.format(', '.join(engines)))
-
-
-@scripts_group.command('enable')
-@click.argument('script-name', metavar='"SCRIPT NAME"')
-@click.pass_obj
-def enable_script(zap_helper, script_name):
-    """Enable a script."""
-    with zap_error_handler():
-        zap_helper.enable_script(script_name)
-
-    console.info('Script "{0}" enabled'.format(script_name))
-
-
-@scripts_group.command('disable')
-@click.argument('script-name', metavar='"SCRIPT NAME"')
-@click.pass_obj
-def disable_script(zap_helper, script_name):
-    """Disable a script."""
-    with zap_error_handler():
-        zap_helper.disable_script(script_name)
-
-    console.info('Script "{0}" disabled'.format(script_name))
-
-
-@scripts_group.command('remove')
-@click.argument('script-name', metavar='"SCRIPT NAME"')
-@click.pass_obj
-def remove_script(zap_helper, script_name):
-    """Remove a script."""
-    with zap_error_handler():
-        zap_helper.remove_script(script_name)
-
-    console.info('Script "{0}" removed'.format(script_name))
-
-
-@scripts_group.command('load')
-@click.option('--name', '-n', prompt=True, help='Name of the script')
-@click.option('--script-type', '-t', prompt=True, help='Type of script')
-@click.option('--engine', '-e', prompt=True, help='Engine the script should use')
-@click.option('--file-path', '-f', prompt=True, help='Path to the script file (i.e. /home/user/script.js)')
-@click.option('--description', '-d', default='', help='Optional description for the script')
-@click.pass_obj
-def load_script(zap_helper, **options):
-    """Load a script from a file."""
-    with zap_error_handler():
-        zap_helper.load_script(**options)
-
-    console.info('Script "{0}" loaded'.format(options['name']))
 
 
 @cli.command('report')
@@ -511,24 +252,8 @@ def report(zap_helper, output, output_format):
     console.info('Report saved to "{0}"'.format(output))
 
 
-def report_alerts(alerts, output_format='table'):
-    """
-    Print our alerts in the given format.
-    """
-    num_alerts = len(alerts)
-
-    if output_format == 'json':
-        click.echo(json.dumps(alerts, indent=4))
-    else:
-        console.info('Issues found: {0}'.format(num_alerts))
-        if num_alerts > 0:
-            click.echo(tabulate([[a['alert'], a['risk'], a['cweid'], a['url']] for a in alerts],
-                                headers=['Alert', 'Risk', 'CWE ID', 'URL'], tablefmt='grid'))
-
-
-def filter_by_ids(original_list, ids_to_filter):
-    """Filter a list of dicts by IDs using an id key on each dict."""
-    if not ids_to_filter:
-        return original_list
-
-    return [i for i in original_list if i['id'] in ids_to_filter]
+# Add subcommand groups
+cli.add_command(policies_group)
+cli.add_command(scanner_group)
+cli.add_command(scripts_group)
+cli.add_command(session_group)

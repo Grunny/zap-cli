@@ -31,6 +31,7 @@ setup(
     license='MIT',
     packages=[
         'zapcli',
+        'zapcli.commands',
     ],
     install_requires=[
         'click==4.0',
