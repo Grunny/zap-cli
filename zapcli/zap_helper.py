@@ -5,6 +5,7 @@ Helper methods to extend and wrap the ZAP API client.
 """
 
 import os
+import platform
 import re
 import shlex
 import subprocess
@@ -55,7 +56,14 @@ class ZAPHelper(object):
             self.logger.warn('ZAP is already running on port {0}'.format(self.port))
             return
 
-        zap_command = ['{0}/zap.sh'.format(self.zap_path), '-daemon', '-port', str(self.port)]
+        if platform.system() == 'Windows' or platform.system().startswith('CYGWIN'):
+            executable = 'zap.bat'
+        else:
+            executable = 'zap.sh'
+
+        executable_path = os.path.join(self.zap_path, executable)
+
+        zap_command = [executable_path, '-daemon', '-port', str(self.port)]
         if extra:
             extra = shlex.split(extra)
             zap_command += extra
