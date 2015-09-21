@@ -24,8 +24,28 @@ class ZAPHelperTestCase(unittest.TestCase):
     def setUp(self):
         self.zap_helper = zap_helper.ZAPHelper(api_key=self.api_key)
 
+    @data(
+        (
+            'Linux',
+            'zap.sh'
+        ),
+        (
+            'Darwin',
+            'zap.sh'
+        ),
+        (
+            'Windows',
+            'zap.bat'
+        ),
+        (
+            'CYGWIN_NT-6.1-WOW64',
+            'zap.bat'
+        )
+    )
+    @unpack
+    @patch('platform.system')
     @patch('subprocess.Popen')
-    def test_start_successful(self, popen_mock):
+    def test_start_successful(self, platform_string, executable, popen_mock, platform_mock):
         """Test starting the ZAP daemon."""
         def is_running_result():
             """Used to mock the result of ZAPHelper.is_running."""
@@ -35,12 +55,13 @@ class ZAPHelperTestCase(unittest.TestCase):
             return False
 
         self.zap_helper.is_running = Mock(side_effect=is_running_result)
+        platform_mock.return_value = platform_string
 
         file_open_mock = mock_open()
         with patch('zapcli.zap_helper.open', file_open_mock, create=True):
             self.zap_helper.start()
 
-        expected_command = shlex.split('/zap.sh -daemon -port 8090')
+        expected_command = shlex.split('{} -daemon -port 8090'.format(executable))
         popen_mock.assert_called_with(expected_command, cwd='', stderr=subprocess.STDOUT, stdout=file_open_mock())
 
     @patch('subprocess.Popen')
