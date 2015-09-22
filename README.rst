@@ -81,3 +81,17 @@ you could run:
     +==================================+========+==========+=================================================================================+
     | Cross Site Scripting (Reflected) | High   |       79 | http://127.0.0.1/index.php?foo=%22%3E%3Cscript%3Ealert%281%29%3B%3C%2Fscript%3E |
     +----------------------------------+--------+----------+---------------------------------------------------------------------------------+
+
+You can also pass extra options to the start command of ZAP using ``--start-options`` or ``-o``
+with commands that allow it. For example, to start ZAP with a custom API key you could use:
+
+::
+
+    $ zap-cli start --start-options '-config api.key=12345'
+
+Or to run a self-contained quick scan (that will start ZAP and shut it down after the scan
+is complete) with a custom API key, you could use:
+
+::
+
+    $ zap-cli --api-key 12345 quick-scan --self-contained -o '-config api.key=12345' -s xss http://127.0.0.1/

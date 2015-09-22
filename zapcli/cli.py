@@ -83,12 +83,14 @@ def cli(ctx, boring, verbose, zap_path, port, zap_url, api_key):
 
 
 @cli.command('start', short_help='Start the ZAP daemon.')
+@click.option('--start-options', '-o', type=str,
+              help='Extra options to pass to the ZAP start command, e.g. "-config api.key=12345"')
 @click.pass_obj
-def start_zap_daemon(zap_helper):
+def start_zap_daemon(zap_helper, start_options):
     """Helper to start the daemon using the current config."""
     console.info('Starting ZAP daemon')
     with zap_error_handler():
-        zap_helper.start()
+        zap_helper.start(options=start_options)
 
 
 @cli.command('shutdown')
@@ -194,6 +196,9 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
 @click.option('--alert-level', '-l', default='High', type=click.Choice(ZAPHelper.alert_levels.keys()),
               help='Minimum alert level to include in report.')
 @click.option('--exclude', '-e', type=str, help='Regex to exclude from all aspects of the scan')
+@click.option('--start-options', '-o', type=str,
+              help='Extra options to pass to the ZAP start command when the --self-contained option is used, ' +
+              ' e.g. "-config api.key=12345"')
 @click.pass_obj
 def quick_scan(zap_helper, url, **options):
     """
@@ -203,7 +208,7 @@ def quick_scan(zap_helper, url, **options):
     if options['self_contained']:
         console.info('Starting ZAP daemon')
         with zap_error_handler():
-            zap_helper.start()
+            zap_helper.start(options['start_options'])
 
     console.info('Running a quick scan for {0}'.format(url))
 
