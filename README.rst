@@ -50,19 +50,17 @@ ZAP CLI can then be used with the following commands:
       --help              Show this message and exit.
 
     Commands:
-      active-scan   Run an Active Scan.
-      alerts        Show alerts at the given alert level.
-      exclude       Exclude a pattern from all scanners.
-      load-session  Load a given session.
-      new-session   Start a new session.
-      open-url      Open a URL using the ZAP proxy.
-      policies      Enable or list a set of policies.
-      quick-scan    Run a quick scan.
-      save-session  Save the session.
-      scanners      Enable, disable, or list a set of scanners.
-      shutdown      Shutdown the ZAP daemon.
-      spider        Run the spider against a URL.
-      start         Start the ZAP daemon.
+      active-scan  Run an Active Scan.
+      alerts       Show alerts at the given alert level.
+      exclude      Exclude a pattern from all scanners.
+      open-url     Open a URL using the ZAP proxy.
+      policies     Enable or list a set of policies.
+      quick-scan   Run a quick scan.
+      scanners     Enable, disable, or list a set of scanners.
+      session      Manage sessions.
+      shutdown     Shutdown the ZAP daemon.
+      spider       Run the spider against a URL.
+      start        Start the ZAP daemon.
 
 You can use ``--help`` with any of the subcommands to get information on how to use
 them.

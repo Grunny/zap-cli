@@ -102,14 +102,21 @@ def shutdown_zap_daemon(zap_helper):
         zap_helper.shutdown()
 
 
-@cli.command('new-session')
+@cli.group(name='session', short_help='Manage sessions.')
+@click.pass_context
+def session_group(ctx):
+    """Manage sessions."""
+    pass
+
+
+@session_group.command('new')
 @click.pass_obj
 def new_session(zap_helper):
     """Start a new session."""
     zap_helper.new_session()
 
 
-@cli.command('save-session')
+@session_group.command('save')
 @click.argument('file-path')
 @click.pass_obj
 def save_session(zap_helper, file_path):
@@ -117,7 +124,7 @@ def save_session(zap_helper, file_path):
     zap_helper.save_session(file_path)
 
 
-@cli.command('load-session')
+@session_group.command('load')
 @click.argument('file-path')
 @click.pass_obj
 def load_session(zap_helper, file_path):
