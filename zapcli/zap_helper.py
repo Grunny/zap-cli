@@ -50,7 +50,7 @@ class ZAPHelper(object):
         """Available scanner groups."""
         return ['all'] + self.scanner_group_map.keys()
 
-    def start(self, extra=None):
+    def start(self, options=None):
         """Start the ZAP Daemon."""
         if self.is_running():
             self.logger.warn('ZAP is already running on port {0}'.format(self.port))
@@ -64,9 +64,9 @@ class ZAPHelper(object):
         executable_path = os.path.join(self.zap_path, executable)
 
         zap_command = [executable_path, '-daemon', '-port', str(self.port)]
-        if extra:
-            extra = shlex.split(extra)
-            zap_command += extra
+        if options:
+            extra_options = shlex.split(options)
+            zap_command += extra_options
 
         log_path = os.path.join(self.zap_path, 'zap.log')
 

@@ -10,7 +10,7 @@ import unittest
 import urllib2
 
 from ddt import ddt, data, unpack
-from mock import Mock, MagicMock, PropertyMock, mock_open, patch
+from mock import Mock, MagicMock, mock_open, patch
 
 from zapcli import zap_helper
 from zapcli.exceptions import ZAPError
@@ -62,6 +62,29 @@ class ZAPHelperTestCase(unittest.TestCase):
             self.zap_helper.start()
 
         expected_command = shlex.split('{} -daemon -port 8090'.format(executable))
+        popen_mock.assert_called_with(expected_command, cwd='', stderr=subprocess.STDOUT, stdout=file_open_mock())
+
+    @patch('platform.system')
+    @patch('subprocess.Popen')
+    def test_start_extra_options(self, popen_mock, platform_mock):
+        """Test starting the ZAP daemon with extra commandline options."""
+        def is_running_result():
+            """Used to mock the result of ZAPHelper.is_running."""
+            if self.zap_helper.is_running.call_count > 1:
+                return True
+
+            return False
+
+        self.zap_helper.is_running = Mock(side_effect=is_running_result)
+        platform_mock.return_value = 'Linux'
+
+        extra_options = '-config api.key=12345 -config connection.timeoutInSecs=60'
+
+        file_open_mock = mock_open()
+        with patch('zapcli.zap_helper.open', file_open_mock, create=True):
+            self.zap_helper.start(options=extra_options)
+
+        expected_command = shlex.split('zap.sh -daemon -port 8090 {0}'.format(extra_options))
         popen_mock.assert_called_with(expected_command, cwd='', stderr=subprocess.STDOUT, stdout=file_open_mock())
 
     @patch('subprocess.Popen')

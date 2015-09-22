@@ -8,7 +8,7 @@ import unittest
 
 from click.testing import CliRunner
 from ddt import ddt, data, unpack
-from mock import Mock, MagicMock, PropertyMock, patch
+from mock import Mock, MagicMock, patch
 import zapv2
 
 from zapcli import zap_helper, cli
@@ -27,7 +27,15 @@ class ZAPCliTestCase(unittest.TestCase):
     def test_start_zap_daemon(self, helper_mock):
         """Test command to start ZAP daemon."""
         result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'start'])
-        helper_mock.assert_called_with()
+        helper_mock.assert_called_with(options=None)
+        self.assertEqual(result.exit_code, 0)
+
+    @patch('zapcli.zap_helper.ZAPHelper.start')
+    def test_start_zap_daemon_with_options(self, helper_mock):
+        """Test command to start ZAP daemon."""
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'start',
+                                              '--start-options', '-config api.key=12345'])
+        helper_mock.assert_called_with(options='-config api.key=12345')
         self.assertEqual(result.exit_code, 0)
 
     @patch('zapcli.zap_helper.ZAPHelper.start')
@@ -35,7 +43,7 @@ class ZAPCliTestCase(unittest.TestCase):
         """Test command to start ZAP daemon has an exit code of 1 when an exception is raised."""
         helper_mock.side_effect = ZAPError('error')
         result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'start'])
-        helper_mock.assert_called_with()
+        helper_mock.assert_called_with(options=None)
         self.assertEqual(result.exit_code, 1)
 
     @patch('zapcli.zap_helper.ZAPHelper.shutdown')
