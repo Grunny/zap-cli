@@ -331,12 +331,68 @@ class ZAPHelperTestCase(unittest.TestCase):
 
         self.assertFalse(ascan_mock.called)
 
+    @patch('zapv2.ascan.disable_scanners')
+    def test_disable_scanners_by_group(self, ascan_mock):
+        """Test disabling a scanners by group name."""
+        self.zap_helper.disable_scanners_by_group('xss')
+        ascan_mock.assert_called_with(','.join(self.zap_helper.scanner_group_map['xss']), apikey=self.api_key)
+
+    @patch('zapv2.ascan.disable_all_scanners')
+    def test_disable_scanners_by_group_all(self, ascan_mock):
+        """Test disabling a scanners by group name."""
+        self.zap_helper.disable_scanners_by_group('all')
+        self.assertTrue(ascan_mock.called)
+
+    @patch('zapv2.ascan.disable_scanners')
+    def test_disable_scanners_by_group_invalid_group(self, ascan_mock):
+        """Test disabling a scanners by group name."""
+        with self.assertRaises(ZAPError):
+            self.zap_helper.disable_scanners_by_group('invalid-group')
+
+        self.assertFalse(ascan_mock.called)
+
+    @patch('zapv2.ascan.enable_all_scanners')
+    @patch('zapv2.ascan.enable_scanners')
+    def test_enable_scanners(self, enable_mock, enable_all_mock):
+        """Test enabling scanners by group(s) and/or ID(s)."""
+        self.zap_helper.enable_scanners(['xss', '0', '50000'])
+
+        self.assertFalse(enable_all_mock.called)
+        self.assertEqual(enable_mock.call_count, 2)
+        enable_mock.assert_any_call(','.join(self.zap_helper.scanner_group_map['xss']), apikey=self.api_key)
+        enable_mock.assert_any_call('0,50000', apikey=self.api_key)
+
+    @patch('zapv2.ascan.enable_all_scanners')
+    @patch('zapv2.ascan.enable_scanners')
+    def test_enable_scanners_error(self, enable_mock, enable_all_mock):
+        """Test enabling scanners by group(s) and/or ID(s)."""
+        with self.assertRaises(ZAPError):
+            self.zap_helper.enable_scanners('invalid-group')
+
+    @patch('zapv2.ascan.disable_all_scanners')
+    @patch('zapv2.ascan.disable_scanners')
+    def test_disable_scanners(self, disable_mock, disable_all_mock):
+        """Test disabling scanners by group(s) and/or ID(s)."""
+        self.zap_helper.disable_scanners(['xss', '0', '50000'])
+
+        self.assertFalse(disable_all_mock.called)
+        self.assertEqual(disable_mock.call_count, 2)
+        disable_mock.assert_any_call(','.join(self.zap_helper.scanner_group_map['xss']), apikey=self.api_key)
+        disable_mock.assert_any_call('0,50000', apikey=self.api_key)
+
+    @patch('zapv2.ascan.disable_all_scanners')
+    @patch('zapv2.ascan.disable_scanners')
+    def test_disable_scanners_error(self, disable_mock, disable_all_mock):
+        """Test disabling scanners by group(s) and/or ID(s)."""
+        with self.assertRaises(ZAPError):
+            self.zap_helper.disable_scanners('invalid-group')
+
     @patch('zapv2.ascan.disable_all_scanners')
     @patch('zapv2.ascan.enable_all_scanners')
     @patch('zapv2.ascan.enable_scanners')
-    def test_enable_scanners(self, enable_mock, enable_all_mock, disable_mock):
+    def test_set_enabled_scanners(self, enable_mock, enable_all_mock, disable_mock):
         """Test enabling scanners by group(s) and/or ID(s)."""
-        self.zap_helper.enable_scanners(['xss', '0', '50000'])
+        self.zap_helper.set_enabled_scanners(['xss', '0', '50000'])
 
         self.assertTrue(disable_mock.called)
         self.assertFalse(enable_all_mock.called)
@@ -347,10 +403,10 @@ class ZAPHelperTestCase(unittest.TestCase):
     @patch('zapv2.ascan.disable_all_scanners')
     @patch('zapv2.ascan.enable_all_scanners')
     @patch('zapv2.ascan.enable_scanners')
-    def test_enable_scanners_error(self, enable_mock, enable_all_mock, disable_mock):
+    def test_set_enabled_scanners_error(self, enable_mock, enable_all_mock, disable_mock):
         """Test enabling scanners by group(s) and/or ID(s)."""
         with self.assertRaises(ZAPError):
-            self.zap_helper.enable_scanners('invalid-group')
+            self.zap_helper.set_enabled_scanners('invalid-group')
 
     @patch('zapv2.ascan.set_enabled_policies')
     def test_enable_policies_by_ids(self, policies_mock):

@@ -200,13 +200,30 @@ class ZAPHelper(object):
         self.logger.debug('Enabling scanner group {0}'.format(group))
         return self.enable_scanners_by_ids(scanner_list)
 
+    def disable_scanners_by_group(self, group):
+        """
+        Disables the scanners in the group if it matches one in the scanner_group_map.
+        """
+        if group == 'all':
+            self.logger.debug('Disabling all scanners')
+            return self.zap.ascan.disable_all_scanners(apikey=self.api_key)
+
+        try:
+            scanner_list = self.scanner_group_map[group]
+        except KeyError:
+            raise ZAPError(
+                'Invalid group "{0}" provided. Valid groups are: {1}'.format(
+                    group, ', '.join(self.scanner_groups)
+                )
+            )
+
+        self.logger.debug('Disabling scanner group {0}'.format(group))
+        return self.disable_scanners_by_ids(scanner_list)
+
     def enable_scanners(self, scanners):
         """
-        Set only the provided scanners by group and/or IDs and disable all others.
+        Enable the provided scanners by group and/or IDs.
         """
-        self.logger.debug('Disabling all current scanners')
-        self.zap.ascan.disable_all_scanners(apikey=self.api_key)
-
         scanner_ids = []
         for scanner in scanners:
             if scanner in self.scanner_groups:
@@ -218,6 +235,30 @@ class ZAPHelper(object):
 
         if scanner_ids:
             self.enable_scanners_by_ids(scanner_ids)
+
+    def disable_scanners(self, scanners):
+        """
+        Enable the provided scanners by group and/or IDs.
+        """
+        scanner_ids = []
+        for scanner in scanners:
+            if scanner in self.scanner_groups:
+                self.disable_scanners_by_group(scanner)
+            elif scanner.isdigit():
+                scanner_ids.append(scanner)
+            else:
+                raise ZAPError('Invalid scanner "{0}" provided. Must be a valid group or numeric ID.'.format(scanner))
+
+        if scanner_ids:
+            self.disable_scanners_by_ids(scanner_ids)
+
+    def set_enabled_scanners(self, scanners):
+        """
+        Set only the provided scanners by group and/or IDs and disable all others.
+        """
+        self.logger.debug('Disabling all current scanners')
+        self.zap.ascan.disable_all_scanners(apikey=self.api_key)
+        self.enable_scanners(scanners)
 
     def enable_policies_by_ids(self, policy_ids):
         """Set enabled policy from a list of IDs."""

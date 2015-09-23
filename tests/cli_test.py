@@ -94,6 +94,7 @@ class ZAPCliTestCase(unittest.TestCase):
         """Testing quick scan."""
         class_mock = Mock()
         class_mock.scanner_groups = ['xss']
+        class_mock.scanner_group_map = {'xss': ['40012', '40014', '40016', '40017']}
         class_mock.alerts.return_value = []
         helper_mock.return_value = class_mock
 
@@ -131,7 +132,8 @@ class ZAPCliTestCase(unittest.TestCase):
         class_mock = Mock()
         class_mock.alerts.return_value = []
         class_mock.scanner_groups = ['xss']
-        class_mock.enable_scanners.side_effect = ZAPError('error')
+        class_mock.scanner_group_map = {'xss': ['40012', '40014', '40016', '40017']}
+        class_mock.set_enabled_scanners.side_effect = ZAPError('error')
         helper_mock.return_value = class_mock
 
         result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'quick-scan',
@@ -154,34 +156,31 @@ class ZAPCliTestCase(unittest.TestCase):
     def test_active_scanners_enable(self, ascan_mock):
         """Test enabling active scanners."""
         class_mock = MagicMock()
-        class_mock.scanners.return_value = [{'id': '1'}, {'id': '5'}, {'id': '10'}]
         ascan_mock.return_value = class_mock
 
-        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'scanners', '--enable',
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'scanners', 'enable',
                                               '--scanners', '1,2,3'])
-        class_mock.enable_scanners.assert_called_with('1', apikey='')
+        class_mock.enable_scanners.assert_called_with('1,2,3', apikey='')
 
     @patch.object(zapv2.ascan, '__new__')
     def test_active_scanners_disable(self, ascan_mock):
         """Test enabling active scanners."""
         class_mock = MagicMock()
-        class_mock.scanners.return_value = [{'id': '1'}, {'id': '5'}, {'id': '10'}]
         ascan_mock.return_value = class_mock
 
-        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'scanners', '--disable',
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'scanners', 'disable',
                                               '--scanners', '1,2,3'])
-        class_mock.disable_scanners.assert_called_with('1', apikey='')
+        class_mock.disable_scanners.assert_called_with('1,2,3', apikey='')
 
     @patch.object(zapv2.ascan, '__new__')
     def test_active_scan_policies_enable(self, ascan_mock):
         """Test enabling active scan policies method."""
         class_mock = MagicMock()
-        class_mock.policies.return_value = [{'id': '1'}, {'id': '5'}, {'id': '10'}]
         ascan_mock.return_value = class_mock
 
-        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'policies', '--enable',
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'policies', 'enable',
                                               '--policy-ids', '1,2,3'])
-        class_mock.set_enabled_policies.assert_called_with('1', apikey='')
+        class_mock.set_enabled_policies.assert_called_with('1,2,3', apikey='')
 
     @patch('zapcli.zap_helper.ZAPHelper.exclude_from_all')
     def test_exclude_from_scanners(self, helper_mock):

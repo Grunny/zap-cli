@@ -37,12 +37,20 @@ def validate_scanner_list(ctx, param, value):
     valid_groups = ctx.obj.scanner_groups
     scanners = [x.strip() for x in value.split(',')]
 
+    if 'all' in scanners:
+        return ['all']
+
+    scanner_ids = []
     for scanner in scanners:
-        if not scanner.isdigit() and scanner not in valid_groups:
+        if scanner.isdigit():
+            scanner_ids.append(scanner)
+        elif scanner in valid_groups:
+            scanner_ids += ctx.obj.scanner_group_map[scanner]
+        else:
             raise click.BadParameter('Invalid scanner "{0}" provided. Must be a valid group or numeric ID.'
                                      .format(scanner))
 
-    return scanners
+    return scanner_ids
 
 
 @contextmanager
@@ -102,14 +110,21 @@ def shutdown_zap_daemon(zap_helper):
         zap_helper.shutdown()
 
 
-@cli.command('new-session')
+@cli.group(name='session', short_help='Manage sessions.')
+@click.pass_context
+def session_group(ctx):
+    """Manage sessions."""
+    pass
+
+
+@session_group.command('new')
 @click.pass_obj
 def new_session(zap_helper):
     """Start a new session."""
     zap_helper.new_session()
 
 
-@cli.command('save-session')
+@session_group.command('save')
 @click.argument('file-path')
 @click.pass_obj
 def save_session(zap_helper, file_path):
@@ -117,7 +132,7 @@ def save_session(zap_helper, file_path):
     zap_helper.save_session(file_path)
 
 
-@cli.command('load-session')
+@session_group.command('load')
 @click.argument('file-path')
 @click.pass_obj
 def load_session(zap_helper, file_path):
@@ -158,7 +173,7 @@ def active_scan(zap_helper, url, scanners, recursive):
 
     with zap_error_handler():
         if scanners:
-            zap_helper.enable_scanners(scanners)
+            zap_helper.set_enabled_scanners(scanners)
 
         zap_helper.run_active_scan(url, recursive=recursive)
 
@@ -174,11 +189,11 @@ def active_scan(zap_helper, url, scanners, recursive):
 def show_alerts(zap_helper, alert_level, output_format, exit_code):
     """Show alerts at the given alert level."""
     alerts = zap_helper.alerts(alert_level)
-    num_alerts = len(alerts)
 
     report_alerts(alerts, output_format)
 
     if exit_code:
+        num_alerts = len(alerts)
         sys.exit(num_alerts)
 
 
@@ -214,7 +229,7 @@ def quick_scan(zap_helper, url, **options):
 
     with zap_error_handler():
         if options['scanners']:
-            zap_helper.enable_scanners(options['scanners'])
+            zap_helper.set_enabled_scanners(options['scanners'])
 
         if options['exclude']:
             zap_helper.exclude_from_all(options['exclude'])
@@ -240,74 +255,103 @@ def quick_scan(zap_helper, url, **options):
     sys.exit(num_alerts)
 
 
-@cli.command('scanners', short_help='Enable, disable, or list a set of scanners.')
-@click.option('--list', 'action', flag_value='list', default=True,
-              help='List the selected scanners (this is the default if no flag is passed).')
-@click.option('--enable', 'action', flag_value='enable',
-              help='Enable the selected scanners.')
-@click.option('--disable', 'action', flag_value='disable',
-              help='Disable the selected scanners.')
+@cli.group(name='scanners', short_help='Enable, disable, or list a set of scanners.')
+@click.pass_context
+def scanner_group(ctx):
+    """
+    Get a list of scanners and whether or not they are enabled,
+    or disable/enable scanners to use in the scan.
+    """
+    pass
+
+
+@scanner_group.command('list')
 @click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
               help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
               'subcommand to get a list of IDs. Available groups are: {0}.'.format(
                   ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
 @click.pass_obj
-def active_scanners(zap_helper, action, scanners):
+def list_scanners(zap_helper, scanners):
+    """Get a list of scanners and whether or not they are enabled."""
+    scanner_list = zap_helper.zap.ascan.scanners()
+
+    if scanners is not None and 'all' not in scanners:
+        scanner_list = filter_by_ids(scanner_list, scanners)
+
+    click.echo(tabulate([[s['id'], s['name'], s['policyId'], s['enabled'], s['attackStrength']]
+                         for s in scanner_list],
+                        headers=['ID', 'Name', 'Policy ID', 'Enabled', 'Strength'],
+                        tablefmt='grid'))
+
+
+@scanner_group.command('enable')
+@click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
+              help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
+              'subcommand to get a list of IDs. Available groups are: {0}.'.format(
+                  ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
+@click.pass_obj
+def enable_scanners(zap_helper, scanners):
+    """Enable scanners to use in a scan."""
+    scanners = scanners or ['all']
+    zap_helper.enable_scanners(scanners)
+
+
+@scanner_group.command('disable')
+@click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
+              help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
+              'subcommand to get a list of IDs. Available groups are: {0}.'.format(
+                  ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
+@click.pass_obj
+def disable_scanners(zap_helper, scanners):
+    """Disable scanners so they are not used in a scan."""
+    scanners = scanners or ['all']
+    zap_helper.disable_scanners(scanners)
+
+
+@cli.group(name='policies', short_help='Enable or list a set of policies.')
+@click.pass_context
+def policies_group(ctx):
     """
-    Get a list of scanners and whether or not they are enabled,
-    or disable/enable scanners to use in the scan.
+    Get a list of policies and whether or not they are enabled,
+    or set the enabled policies to use in the scan.
     """
-    scanner_list = []
-
-    if scanners and 'all' not in scanners:
-        for scanner in scanners:
-            if scanner.isdigit():
-                scanner_list.append(scanner)
-            else:
-                scanner_list += zap_helper.scanner_group_map[scanner]
-
-    scanner_list = filter_by_ids(zap_helper.zap.ascan.scanners(), scanner_list)
-
-    if action == 'enable':
-        filtered_scanner_ids = [s['id'] for s in scanner_list]
-        zap_helper.enable_scanners_by_ids(filtered_scanner_ids)
-    elif action == 'disable':
-        filtered_scanner_ids = [s['id'] for s in scanner_list]
-        zap_helper.disable_scanners_by_ids(filtered_scanner_ids)
-    else:
-        click.echo(tabulate([[s['id'], s['name'], s['policyId'], s['enabled'], s['attackStrength']]
-                             for s in scanner_list],
-                            headers=['ID', 'Name', 'Policy ID', 'Enabled', 'Strength'],
-                            tablefmt='grid'))
+    pass
 
 
-@cli.command('policies', short_help='Enable or list a set of policies.')
-@click.option('--list', 'action', flag_value='list', default=True,
-              help='List the selected policies (this is the default if no flag is passed).')
-@click.option('--enable', 'action', flag_value='enable',
-              help='Enable the selected policies.')
+@policies_group.command('list')
 @click.option('--policy-ids', '-p', type=str, callback=validate_ids,
               help='Comma separated list of policy IDs to list or enable ' +
               '(use policies without any to get a list of IDs).')
 @click.pass_obj
-def active_scan_policies(zap_helper, action, policy_ids):
+def list_policies(zap_helper, policy_ids):
     """
-    Get a list of policies and whether or not they are enabled,
-    or set the enabled policies to use in the scan.
+    Get a list of policies and whether or not they are enabled.
+    """
+    policies = filter_by_ids(zap_helper.zap.ascan.policies(), policy_ids)
+
+    click.echo(tabulate([[p['id'], p['name'], p['enabled'], p['attackStrength']]
+                         for p in policies],
+                        headers=['ID', 'Name', 'Enabled', 'Strength'],
+                        tablefmt='grid'))
+
+
+@policies_group.command('enable')
+@click.option('--policy-ids', '-p', type=str, callback=validate_ids,
+              help='Comma separated list of policy IDs to list or enable ' +
+              '(use policies without any to get a list of IDs).')
+@click.pass_obj
+def enable_policies(zap_helper, policy_ids):
+    """
+    Set the enabled policies to use in a scan.
 
     When you enable a selection of policies, all other policies are
     disabled.
     """
-    policies = filter_by_ids(zap_helper.zap.ascan.policies(), policy_ids)
+    if not policy_ids:
+        policies = zap_helper.zap.ascan.policies()
+        policy_ids = [p['id'] for p in policies]
 
-    if action == 'enable':
-        filtered_policy_ids = [p['id'] for p in policies]
-        zap_helper.enable_policies_by_ids(filtered_policy_ids)
-    else:
-        click.echo(tabulate([[p['id'], p['name'], p['enabled'], p['attackStrength']]
-                             for p in policies],
-                            headers=['ID', 'Name', 'Enabled', 'Strength'],
-                            tablefmt='grid'))
+    zap_helper.enable_policies_by_ids(policy_ids)
 
 
 @cli.command('exclude', short_help='Exclude a pattern from all scanners.')
@@ -336,11 +380,7 @@ def report_alerts(alerts, output_format='table'):
 
 def filter_by_ids(original_list, ids_to_filter):
     """Filter a list of dicts by IDs using an id key on each dict."""
-    filtered_list = []
+    if not ids_to_filter:
+        return original_list
 
-    if ids_to_filter:
-        filtered_list += [i for i in original_list if i['id'] in ids_to_filter and i not in filtered_list]
-    else:
-        filtered_list = original_list
-
-    return filtered_list
+    return [i for i in original_list if i['id'] in ids_to_filter]
