@@ -38,6 +38,8 @@ class ZAPHelper(object):
     timeout = 60
 
     def __init__(self, zap_path='', port=8090, url='http://127.0.0.1', api_key='', logger=None):
+        if os.path.isfile(zap_path):
+            zap_path = os.path.dirname(zap_path)
         self.zap_path = zap_path
         self.port = port
         self.proxy_url = '{0}:{1}'.format(url, self.port)
