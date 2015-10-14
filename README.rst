@@ -93,3 +93,9 @@ is complete) with a custom API key, you could use:
 ::
 
     $ zap-cli --api-key 12345 quick-scan --self-contained -o '-config api.key=12345' -s xss http://127.0.0.1/
+
+Or to run the same scan with the API key disabled:
+
+::
+
+    $ zap-cli quick-scan -sc -o '-config api.disablekey=true' -s xss http://127.0.0.1/
