@@ -9,6 +9,7 @@ import sys
 import click
 from tabulate import tabulate
 
+from zapcli import __version__
 from zapcli.exceptions import ZAPError
 from zapcli.log import console
 from zapcli.zap_helper import ZAPHelper
@@ -63,7 +64,7 @@ def zap_error_handler():
         sys.exit(1)
 
 
-@click.group(help=__doc__)
+@click.group(help='ZAP CLI v{0} - A simple commandline tool for OWASP ZAP.'.format(__version__))
 @click.option('--boring', is_flag=True, default=False, help='Remove color from console output.')
 @click.option('--verbose', '-v', is_flag=True, default=False, type=bool,
               help='Add more verbose debugging output.')
