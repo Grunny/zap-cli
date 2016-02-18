@@ -10,7 +10,7 @@ import unittest
 import urllib2
 
 from ddt import ddt, data, unpack
-from mock import Mock, MagicMock, mock_open, patch
+from mock import PropertyMock, Mock, MagicMock, mock_open, patch
 
 from zapcli import zap_helper
 from zapcli.exceptions import ZAPError
@@ -227,6 +227,21 @@ class ZAPHelperTestCase(unittest.TestCase):
 
         with self.assertRaises(ZAPError):
             self.zap_helper.run_active_scan('http://localhost')
+
+    def test_run_ajax_spider(self):
+        """Test running the AJAX Spider."""
+        def status_result():
+            """Return value of the status property."""
+            if status.call_count > 2:
+                return 'stopped'
+            return 'running'
+
+        class_mock = MagicMock()
+        status = PropertyMock(side_effect=status_result)
+        type(class_mock).status = status
+        self.zap_helper.zap.ajaxSpider = class_mock
+
+        self.zap_helper.run_ajax_spider('http://localhost', status_check_sleep=0)
 
     @data(
         (
