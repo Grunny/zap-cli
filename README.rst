@@ -7,6 +7,12 @@ executing quick, targeted attacks.
 Installation
 ============
 
+To install the latest release from PyPI, you can run the following command:
+
+::
+
+    pip install --upgrade zapcli
+
 To install the latest development version of ZAP CLI, you can run the
 following:
 
@@ -34,7 +40,7 @@ ZAP CLI can then be used with the following commands:
 
     Usage: zap-cli [OPTIONS] COMMAND [ARGS]...
 
-      ZAP CLI.
+      ZAP CLI - A simple commandline tool for OWASP ZAP.
 
     Options:
       --boring            Remove color from console output.
@@ -51,6 +57,7 @@ ZAP CLI can then be used with the following commands:
 
     Commands:
       active-scan  Run an Active Scan.
+      ajax-spider  Run the AJAX Spider against a URL.
       alerts       Show alerts at the given alert level.
       exclude      Exclude a pattern from all scanners.
       open-url     Open a URL using the ZAP proxy.

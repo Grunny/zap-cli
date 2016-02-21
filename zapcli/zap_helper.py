@@ -142,6 +142,12 @@ class ZAPHelper(object):
 
         if not scan_id:
             raise ZAPError('Error running active scan.')
+        elif not scan_id.isdigit():
+            raise ZAPError(('Error running active scan: "{0}". Make sure the URL is in the site ' +
+                            'tree by using the open-url or scanner commands before running an active ' +
+                            'scan.').format(scan_id))
+
+        self.logger.debug('Started scan with ID {0}...'.format(scan_id))
 
         while int(self.zap.ascan.status()) < 100:
             self.logger.debug('Scan progress %: {0}'.format(self.zap.ascan.status()))

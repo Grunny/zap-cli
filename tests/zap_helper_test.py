@@ -228,6 +228,15 @@ class ZAPHelperTestCase(unittest.TestCase):
         with self.assertRaises(ZAPError):
             self.zap_helper.run_active_scan('http://localhost')
 
+    def test_run_active_scan_url_not_found(self):
+        """Test running an active scan when the URL is not in the site tree."""
+        class_mock = MagicMock()
+        class_mock.scan.return_value = 'URL Not Found in the Scan Tree'
+        self.zap_helper.zap.ascan = class_mock
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.run_active_scan('http://localhost')
+
     def test_run_ajax_spider(self):
         """Test running the AJAX Spider."""
         def status_result():
