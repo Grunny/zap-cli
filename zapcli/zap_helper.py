@@ -123,7 +123,7 @@ class ZAPHelper(object):
         time.sleep(sleep_after_open)
 
     def run_spider(self, target_url, status_check_sleep=10):
-        """Run an active scan against a URL."""
+        """Run spider against a URL."""
         self.logger.debug('Spidering target {0}...'.format(target_url))
 
         self.zap.spider.scan(target_url, apikey=self.api_key)
@@ -148,6 +148,18 @@ class ZAPHelper(object):
             time.sleep(status_check_sleep)
 
         self.logger.debug('Scan #{0} completed'.format(scan_id))
+
+    def run_ajax_spider(self, target_url, status_check_sleep=10):
+        """Run AJAX Spider against a URL."""
+        self.logger.debug('AJAX Spidering target {0}...'.format(target_url))
+
+        self.zap.ajaxSpider.scan(target_url, apikey=self.api_key)
+
+        while self.zap.ajaxSpider.status == 'running':
+            self.logger.debug('AJAX Spider: {0}'.format(self.zap.ajaxSpider.status))
+            time.sleep(status_check_sleep)
+
+        self.logger.debug('AJAX Spider completed')
 
     def alerts(self, alert_level='High'):
         """Get a filtered list of alerts at the given alert level, and sorted by alert level."""

@@ -89,6 +89,20 @@ class ZAPCliTestCase(unittest.TestCase):
         self.assertFalse(helper_mock.called)
         self.assertEqual(result.exit_code, 2)
 
+    @patch('zapcli.zap_helper.ZAPHelper.run_ajax_spider')
+    def test_ajax_spider_url(self, helper_mock):
+        """Test AJAX Spider URL method."""
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'ajax-spider', 'http://localhost/'])
+        helper_mock.assert_called_with('http://localhost/')
+        self.assertEqual(result.exit_code, 0)
+
+    @patch('zapcli.zap_helper.ZAPHelper.run_ajax_spider')
+    def test_ajax_spider_url_no_url(self, helper_mock):
+        """Test AJAX Spider URL method isn't called and an error status raised when no URL provided."""
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'ajax-spider'])
+        self.assertFalse(helper_mock.called)
+        self.assertEqual(result.exit_code, 2)
+
     @patch.object(zap_helper.ZAPHelper, '__new__')
     def test_quick_scan(self, helper_mock):
         """Testing quick scan."""

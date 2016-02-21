@@ -160,6 +160,15 @@ def spider_url(zap_helper, url):
     zap_helper.run_spider(url)
 
 
+@cli.command('ajax-spider')
+@click.argument('url')
+@click.pass_obj
+def ajax_spider_url(zap_helper, url):
+    """Run the AJAX Spider against a URL."""
+    console.info('Running AJAX Spider...')
+    zap_helper.run_ajax_spider(url)
+
+
 @cli.command('active-scan', short_help='Run an Active Scan.')
 @click.argument('url')
 @click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
@@ -213,6 +222,7 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
               'subcommand to get a list of IDs. Available groups are: {0}.'.format(
                   ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
 @click.option('--spider', is_flag=True, default=False, help='If set, run the spider before running the scan.')
+@click.option('--ajax-spider', is_flag=True, default=False, help='If set, run the AJAX Spider before running the scan.')
 @click.option('--recursive', '-r', is_flag=True, default=False, help='Make scan recursive.')
 @click.option('--alert-level', '-l', default='High', type=click.Choice(ZAPHelper.alert_levels.keys()),
               help='Minimum alert level to include in report.')
@@ -247,6 +257,9 @@ def quick_scan(zap_helper, url, **options):
 
         if options['spider']:
             zap_helper.run_spider(url)
+
+        if options['ajax_spider']:
+            zap_helper.run_ajax_spider(url)
 
         zap_helper.run_active_scan(url, recursive=options['recursive'])
 
