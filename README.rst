@@ -65,6 +65,18 @@ ZAP CLI can then be used with the following commands:
 You can use ``--help`` with any of the subcommands to get information on how to use
 them.
 
+Getting started running a scan
+------------------------------
+In order to run a scan, you can use either the ``active-scan`` or the ``quick-scan``
+command. The ``active-scan`` only runs an active scan against a URL that is already
+in ZAP's site tree (i.e. has already been opened using the ``open-url`` command or
+found by running the ``spider``). The ``quick-scan`` command is intended to be a way
+to run quick scans of a site with most options contained within a single command
+(including being able to start and shutdown ZAP before and after), so you can do
+everything in one go. Without any other options passed to the command, ``quick-scan``
+will open the URL to make sure it's in the site tree, run an active scan, and will
+output any found alerts.
+
 As an example, to run a quick scan of a URL that will open and spider the URL, scan
 recursively, exclude URLs matching a given regex, and only use XSS and SQLi scanners,
 you could run:
@@ -80,6 +92,44 @@ you could run:
     | Cross Site Scripting (Reflected) | High   |       79 | http://127.0.0.1/index.php?foo=%22%3E%3Cscript%3Ealert%281%29%3B%3C%2Fscript%3E |
     +----------------------------------+--------+----------+---------------------------------------------------------------------------------+
 
+The above example is equivalent to running the following commands in order:
+
+::
+
+    $ zap-cli open-url http://127.0.0.1/
+    [INFO]            Accessing URL http://127.0.0.1/
+    $ zap-cli exclude "some_regex_pattern"
+    $ zap-cli spider http://127.0.0.1/
+    [INFO]            Running spider...
+    $ zap-cli active-scan --scanners xss,sqli --recursive http://127.0.0.1/
+    [INFO]            Running an active scan...
+    $ zap-cli alerts
+    [INFO]            Issues found: 1
+    +----------------------------------+--------+----------+---------------------------------------------------------------------------------+
+    | Alert                            | Risk   |   CWE ID | URL                                                                             |
+    +==================================+========+==========+=================================================================================+
+    | Cross Site Scripting (Reflected) | High   |       79 | http://127.0.0.1/index.php?foo=%22%3E%3Cscript%3Ealert%281%29%3B%3C%2Fscript%3E |
+    +----------------------------------+--------+----------+---------------------------------------------------------------------------------+
+
+The ``quick-scan`` command also has a ``--self-contained`` option (or ``-sc`` for short)
+which will first try to start ZAP if it isn't running already and shutdown ZAP once the
+scan is finished. For example:
+
+::
+
+    $ zap-cli quick-scan --self-contained --spider -r -s xss http://127.0.0.1/
+    [INFO]            Starting ZAP daemon
+    [INFO]            Running a quick scan for http://127.0.0.1/
+    [INFO]            Issues found: 1
+    +----------------------------------+--------+----------+---------------------------------------------------------------------------------+
+    | Alert                            | Risk   |   CWE ID | URL                                                                             |
+    +==================================+========+==========+=================================================================================+
+    | Cross Site Scripting (Reflected) | High   |       79 | http://127.0.0.1/index.php?foo=%22%3E%3Cscript%3Ealert%281%29%3B%3C%2Fscript%3E |
+    +----------------------------------+--------+----------+---------------------------------------------------------------------------------+
+    [INFO]            Shutting down ZAP daemon
+
+Extra start options
+-------------------
 You can also pass extra options to the start command of ZAP using ``--start-options`` or ``-o``
 with commands that allow it. For example, to start ZAP with a custom API key you could use:
 

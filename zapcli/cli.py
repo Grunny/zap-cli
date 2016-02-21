@@ -169,7 +169,12 @@ def spider_url(zap_helper, url):
 @click.option('--recursive', '-r', is_flag=True, default=False, help='Make scan recursive.')
 @click.pass_obj
 def active_scan(zap_helper, url, scanners, recursive):
-    """Run an Active Scan against a URL."""
+    """
+    Run an Active Scan against a URL.
+
+    The URL to be scanned must be in ZAP's site tree, i.e. it should have already
+    been opened using the open-url command or found by running the spider command.
+    """
     console.info('Running an active scan...')
 
     with zap_error_handler():
@@ -218,8 +223,11 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
 @click.pass_obj
 def quick_scan(zap_helper, url, **options):
     """
-    Run a quick scan by opening a URL, optionally spidering, running an Active Scan,
-    and reporting any issues found.
+    Run a quick scan of a site by opening a URL, optionally spidering the URL,
+    running an Active Scan, and reporting any issues found.
+
+    This command contains most scan options as parameters, so you can do
+    everything in one go.
     """
     if options['self_contained']:
         console.info('Starting ZAP daemon')
