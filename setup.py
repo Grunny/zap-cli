@@ -41,11 +41,11 @@ setup(
     extras_require={
         'dev': [
             'coverage==3.7.1',
-            'ddt==1.0.0',
-            'mock==1.0.1',
+            'ddt==1.0.1',
+            'mock==2.0.0',
             'pep8==1.6.2',
-            'pylint==1.3.0',
-            'pytest==2.7.1',
+            'pylint==1.5.5',
+            'pytest==2.9.1',
         ],
     },
     include_package_data=True,

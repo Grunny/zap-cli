@@ -1,6 +1,9 @@
 ZAP CLI
 =======
 
+.. image:: https://travis-ci.org/Grunny/zap-cli.svg?branch=master
+    :target: https://travis-ci.org/Grunny/zap-cli
+
 A commandline tool that wraps the OWASP ZAP API for controlling ZAP and
 executing quick, targeted attacks.
 
@@ -45,8 +48,8 @@ ZAP CLI can then be used with the following commands:
     Options:
       --boring            Remove color from console output.
       -v, --verbose       Add more verbose debugging output.
-      --zap-path TEXT     Path to the ZAP daemon. Defaults to the value of the
-                          environment variable ZAP_PATH.
+      --zap-path TEXT     Path to the ZAP daemon. Defaults to /zap or the value of
+                          the environment variable ZAP_PATH.
       -p, --port INTEGER  Port of the ZAP proxy. Defaults to 8090 or the value of
                           the environment variable ZAP_PORT.
       --zap-url TEXT      The URL of the ZAP proxy. Defaults to http://127.0.0.1
