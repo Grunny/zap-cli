@@ -5,7 +5,8 @@ persistent = no
 [MESSAGES CONTROL]
 # Messages to disable
 disable = star-args,too-few-public-methods,too-many-public-methods,too-many-arguments,
-    abstract-method,maybe-no-member,redundant-keyword-arg,too-many-instance-attributes
+    abstract-method,maybe-no-member,redundant-keyword-arg,too-many-instance-attributes,
+    logging-format-interpolation
 
 [REPORTS]
 # Colorize output
