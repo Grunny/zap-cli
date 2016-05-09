@@ -1,6 +1,12 @@
 Release History
 ===============
 
+v0.2.1 (2016-05-09)
+-------------------
+* Handle errors when running the Spider (#9)
+* Make ZAP path default to /zap if neither the environment variable nor the
+  parameter are set
+
 v0.2.0 (2016-02-21)
 -------------------
 * Add support for running AJAX Spider both on its own and as part of a
