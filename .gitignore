@@ -7,6 +7,7 @@ build/
 dist/
 docs/_build/
 venv/
+.cache/
 
 # OS and IDE specific stuff
 *.iml
