@@ -126,13 +126,20 @@ class ZAPHelper(object):
         """Run spider against a URL."""
         self.logger.debug('Spidering target {0}...'.format(target_url))
 
-        self.zap.spider.scan(target_url, apikey=self.api_key)
+        scan_id = self.zap.spider.scan(target_url, apikey=self.api_key)
+
+        if not scan_id:
+            raise ZAPError('Error running spider.')
+        elif not scan_id.isdigit():
+            raise ZAPError('Error running spider: "{0}"'.format(scan_id))
+
+        self.logger.debug('Started spider with ID {0}...'.format(scan_id))
 
         while int(self.zap.spider.status()) < 100:
             self.logger.debug('Spider progress %: {0}'.format(self.zap.spider.status()))
             time.sleep(status_check_sleep)
 
-        self.logger.debug('Spider completed')
+        self.logger.debug('Spider #{0} completed'.format(scan_id))
 
     def run_active_scan(self, target_url, recursive=False, status_check_sleep=10):
         """Run an active scan against a URL."""

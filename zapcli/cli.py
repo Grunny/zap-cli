@@ -157,7 +157,8 @@ def open_url(zap_helper, url):
 def spider_url(zap_helper, url):
     """Run the spider against a URL."""
     console.info('Running spider...')
-    zap_helper.run_spider(url)
+    with zap_error_handler():
+        zap_helper.run_spider(url)
 
 
 @cli.command('ajax-spider')

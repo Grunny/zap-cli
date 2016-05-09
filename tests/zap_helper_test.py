@@ -197,11 +197,21 @@ class ZAPHelperTestCase(unittest.TestCase):
             return '50'
 
         class_mock = MagicMock()
+        class_mock.scan.return_value = '1'
         status = Mock(side_effect=status_result)
         class_mock.status = status
         self.zap_helper.zap.spider = class_mock
 
         self.zap_helper.run_spider('http://localhost', status_check_sleep=0)
+
+    def test_run_spider_error(self):
+        """Test running the spider when an error occurs."""
+        class_mock = MagicMock()
+        class_mock.scan.return_value = 'Provided parameter has illegal or unrecognized value'
+        self.zap_helper.zap.spider = class_mock
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.run_spider('http://localhost', status_check_sleep=0)
 
     def test_run_active_scan(self):
         """Test running an active scan."""
