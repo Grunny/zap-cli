@@ -45,7 +45,8 @@ class ZAPHelperTestCase(unittest.TestCase):
     @unpack
     @patch('platform.system')
     @patch('subprocess.Popen')
-    def test_start_successful(self, platform_string, executable, popen_mock, platform_mock):
+    @patch('os.path.isfile')
+    def test_start_successful(self, platform_string, executable, isfile_mock, popen_mock, platform_mock):
         """Test starting the ZAP daemon."""
         def is_running_result():
             """Used to mock the result of ZAPHelper.is_running."""
@@ -56,6 +57,7 @@ class ZAPHelperTestCase(unittest.TestCase):
 
         self.zap_helper.is_running = Mock(side_effect=is_running_result)
         platform_mock.return_value = platform_string
+        isfile_mock.return_value = True
 
         file_open_mock = mock_open()
         with patch('zapcli.zap_helper.open', file_open_mock, create=True):
@@ -66,7 +68,8 @@ class ZAPHelperTestCase(unittest.TestCase):
 
     @patch('platform.system')
     @patch('subprocess.Popen')
-    def test_start_extra_options(self, popen_mock, platform_mock):
+    @patch('os.path.isfile')
+    def test_start_extra_options(self, isfile_mock, popen_mock, platform_mock):
         """Test starting the ZAP daemon with extra commandline options."""
         def is_running_result():
             """Used to mock the result of ZAPHelper.is_running."""
@@ -77,6 +80,7 @@ class ZAPHelperTestCase(unittest.TestCase):
 
         self.zap_helper.is_running = Mock(side_effect=is_running_result)
         platform_mock.return_value = 'Linux'
+        isfile_mock.return_value = True
 
         extra_options = '-config api.key=12345 -config connection.timeoutInSecs=60'
 
@@ -106,6 +110,16 @@ class ZAPHelperTestCase(unittest.TestCase):
         self.zap_helper.start()
 
         self.assertFalse(popen_mock.called)
+
+    @patch('subprocess.Popen')
+    @patch('os.path.isfile')
+    def test_start_not_found(self, isfile_mock, popen_mock):
+        """Test trying to start ZAP when the ZAP executable is not found."""
+        self.zap_helper.is_running = Mock(return_value=False)
+        isfile_mock.return_value = False
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.start()
 
     @patch('zapv2.core.shutdown')
     def test_shutdown_successful(self, shutdown_mock):
