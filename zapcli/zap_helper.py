@@ -64,6 +64,10 @@ class ZAPHelper(object):
             executable = 'zap.sh'
 
         executable_path = os.path.join(self.zap_path, executable)
+        if not os.path.isfile(executable_path):
+            raise ZAPError(('ZAP was not found in the path "{0}". You can set the path to where ZAP is ' +
+                            'installed on your system using the --zap-path command line parameter or by ' +
+                            'default using the ZAP_PATH environment variable.').format(self.zap_path))
 
         zap_command = [executable_path, '-daemon', '-port', str(self.port)]
         if options:
