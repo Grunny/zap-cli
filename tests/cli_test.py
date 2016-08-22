@@ -61,6 +61,37 @@ class ZAPCliTestCase(unittest.TestCase):
         helper_mock.assert_called_with()
         self.assertEqual(result.exit_code, 1)
 
+    @patch('zapcli.zap_helper.ZAPHelper.is_running')
+    def test_check_status_running(self, helper_mock):
+        """Test the status command."""
+        helper_mock.return_value = True
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'status'])
+        self.assertEqual(result.exit_code, 0)
+
+    @patch('zapcli.zap_helper.ZAPHelper.is_running')
+    def test_check_status_not_running(self, helper_mock):
+        """Test the status command when ZAP is not running."""
+        helper_mock.return_value = False
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'status'])
+        self.assertEqual(result.exit_code, 1)
+
+    @patch('zapcli.zap_helper.ZAPHelper.wait_for_zap')
+    @patch('zapcli.zap_helper.ZAPHelper.is_running')
+    def test_check_status_timeout(self, running_mock, wait_mock):
+        """Test the status command with a timeout."""
+        running_mock.return_value = False
+        wait_mock.side_effect = ZAPError('error')
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'status', '-t', '0'])
+        self.assertEqual(result.exit_code, 1)
+
+    @patch('zapcli.zap_helper.ZAPHelper.wait_for_zap')
+    @patch('zapcli.zap_helper.ZAPHelper.is_running')
+    def test_check_status_timeout_success(self, running_mock, wait_mock):
+        """Test the status command with a successful wait for ZAP to start."""
+        running_mock.return_value = False
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'status', '-t', '0'])
+        self.assertEqual(result.exit_code, 0)
+
     @patch('zapcli.zap_helper.ZAPHelper.open_url')
     def test_open_url(self, helper_mock):
         """Test open URL method."""
