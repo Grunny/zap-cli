@@ -83,11 +83,7 @@ class ZAPHelper(object):
                 zap_command, cwd=self.zap_path, stdout=log_file,
                 stderr=subprocess.STDOUT)
 
-        timeout_time = time.time() + self.timeout
-        while not self.is_running():
-            if time.time() > timeout_time:
-                raise ZAPError('Timed out waiting for ZAP to start.')
-            time.sleep(2)
+        self.wait_for_zap(self.timeout)
 
         self.logger.debug('ZAP started successfully.')
 
@@ -107,6 +103,14 @@ class ZAPHelper(object):
             time.sleep(2)
 
         self.logger.debug('ZAP shutdown successfully.')
+
+    def wait_for_zap(self, timeout):
+        """Wait for ZAP to be ready to receive API calls."""
+        timeout_time = time.time() + timeout
+        while not self.is_running():
+            if time.time() > timeout_time:
+                raise ZAPError('Timed out waiting for ZAP to start.')
+            time.sleep(2)
 
     def is_running(self):
         """Check if ZAP is running."""

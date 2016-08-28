@@ -111,6 +111,35 @@ def shutdown_zap_daemon(zap_helper):
         zap_helper.shutdown()
 
 
+@cli.command('status', short_help='Check if ZAP is running.')
+@click.option('--timeout', '-t', type=int,
+              help='Wait this number of seconds for ZAP to have started')
+@click.pass_obj
+def check_status(zap_helper, timeout):
+    """
+    Check if ZAP is running and able to receive API calls.
+
+    You can provide a timeout option which is the amount of time in seconds
+    the command should wait for ZAP to start if it is not currently running.
+    This is useful to run before calling other commands if ZAP was started
+    outside of zap-cli. For example:
+
+        zap-cli status -t 60 && zap-cli open-url "http://127.0.0.1/"
+
+    Exits with code 1 if ZAP is either not running or the command timed out
+    waiting for ZAP to start.
+    """
+    with zap_error_handler():
+        if zap_helper.is_running():
+            console.info('ZAP is running')
+        elif timeout is not None:
+            zap_helper.wait_for_zap(timeout)
+            console.info('ZAP is running')
+        else:
+            console.error('ZAP is not running')
+            sys.exit(1)
+
+
 @cli.group(name='session', short_help='Manage sessions.')
 @click.pass_context
 def session_group(ctx):

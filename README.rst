@@ -71,6 +71,7 @@ ZAP CLI can then be used with the following commands:
       shutdown     Shutdown the ZAP daemon.
       spider       Run the spider against a URL.
       start        Start the ZAP daemon.
+      status       Check if ZAP is running.
 
 You can use ``--help`` with any of the subcommands to get information on how to use
 them.
