@@ -1,6 +1,12 @@
 Release History
 ===============
 
+v0.3.0 (2016-08-28)
+-------------------
+* Add a status command to check if ZAP is running (#14)
+* Raise an error when the ZAP executable is not found (#11)
+* Upgrade python-owasp-zap-v2.4 dependency to 0.0.8
+
 v0.2.1 (2016-05-09)
 -------------------
 * Handle errors when running the Spider (#9)
