@@ -518,6 +518,28 @@ class ZAPHelperTestCase(unittest.TestCase):
         with self.assertRaises(ZAPError):
             self.zap_helper.load_session(file_path)
 
+    @patch('zapv2.core.xmlreport')
+    @patch('zapcli.zap_helper.ZAPHelper.write_report')
+    def test_xmlreport(self, write_mock, xmlreport_mock):
+        """Test XML report."""
+        report_str = 'test_xml_report'
+        file_path = 'foo.xml'
+        xmlreport_mock.return_value = report_str
+        self.zap_helper.xmlreport(file_path)
+        xmlreport_mock.assert_called_with(apikey=self.api_key)
+        write_mock.assert_called_with(report_str, file_path)
+
+    @patch('zapv2.core.htmlreport')
+    @patch('zapcli.zap_helper.ZAPHelper.write_report')
+    def test_htmlreport(self, write_mock, htmlreport_mock):
+        """Test HTML report."""
+        report_str = 'test_html_report'
+        file_path = 'foo.html'
+        htmlreport_mock.return_value = report_str
+        self.zap_helper.htmlreport(file_path)
+        htmlreport_mock.assert_called_with(apikey=self.api_key)
+        write_mock.assert_called_with(report_str, file_path)
+
 
 if __name__ == '__main__':
     unittest.main()
