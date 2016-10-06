@@ -331,13 +331,13 @@ class ZAPHelper(object):
         self.logger.debug('Loading session from "{0}"'.format(file_path))
         self.zap.core.load_session(file_path, apikey=self.api_key)
 
-    def xmlreport(self, file_path):
+    def xml_report(self, file_path):
         """Generate xml report"""
         self.logger.debug('Generating XML report')
         report = self.zap.core.xmlreport(apikey=self.api_key)
         self.write_report(report, file_path)
 
-    def htmlreport(self, file_path):
+    def html_report(self, file_path):
         """Generate html report"""
         self.logger.debug('Generating HTML report')
         report = self.zap.core.htmlreport(apikey=self.api_key)
