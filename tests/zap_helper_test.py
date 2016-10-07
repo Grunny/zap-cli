@@ -519,26 +519,34 @@ class ZAPHelperTestCase(unittest.TestCase):
             self.zap_helper.load_session(file_path)
 
     @patch('zapv2.core.xmlreport')
-    @patch('zapcli.zap_helper.ZAPHelper.write_report')
-    def test_xml_report(self, write_mock, xmlreport_mock):
+    def test_xml_report(self, xmlreport_mock):
         """Test XML report."""
         report_str = 'test_xml_report'
-        file_path = 'foo.xml'
         xmlreport_mock.return_value = report_str
-        self.zap_helper.xml_report(file_path)
+        file_path = 'foo.xml'
+        file_open_mock = mock_open()
+
+        with patch('zapcli.zap_helper.open', file_open_mock, create=True):
+            self.zap_helper.xml_report(file_path)
+
         xmlreport_mock.assert_called_with(apikey=self.api_key)
-        write_mock.assert_called_with(report_str, file_path)
+        file_open_mock.assert_called_with(file_path, 'w')
+        file_open_mock().write.assert_called_with(report_str)
 
     @patch('zapv2.core.htmlreport')
-    @patch('zapcli.zap_helper.ZAPHelper.write_report')
-    def test_html_report(self, write_mock, htmlreport_mock):
+    def test_html_report(self, htmlreport_mock):
         """Test HTML report."""
         report_str = 'test_html_report'
-        file_path = 'foo.html'
         htmlreport_mock.return_value = report_str
-        self.zap_helper.html_report(file_path)
+        file_path = 'foo.html'
+        file_open_mock = mock_open()
+
+        with patch('zapcli.zap_helper.open', file_open_mock, create=True):
+            self.zap_helper.html_report(file_path)
+
         htmlreport_mock.assert_called_with(apikey=self.api_key)
-        write_mock.assert_called_with(report_str, file_path)
+        file_open_mock.assert_called_with(file_path, 'w')
+        file_open_mock().write.assert_called_with(report_str)
 
 
 if __name__ == '__main__':
