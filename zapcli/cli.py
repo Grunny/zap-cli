@@ -423,9 +423,9 @@ def exclude_from_scanners(zap_helper, pattern):
 def report(zap_helper, output, output_format):
     """Generate XML or HTML report."""
     if output_format == 'html':
-        zap_helper.htmlreport(output)
+        zap_helper.html_report(output)
     else:
-        zap_helper.xmlreport(output)
+        zap_helper.xml_report(output)
 
 
 def report_alerts(alerts, output_format='table'):
