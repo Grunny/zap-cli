@@ -1,6 +1,10 @@
 Release History
 ===============
 
+v0.4.0 (2016-10-09)
+-------------------
+* Add a report command to save a HTML or XML report
+
 v0.3.0 (2016-08-28)
 -------------------
 * Add a status command to check if ZAP is running (#14)

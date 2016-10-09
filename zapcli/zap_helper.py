@@ -332,17 +332,19 @@ class ZAPHelper(object):
         self.zap.core.load_session(file_path, apikey=self.api_key)
 
     def xml_report(self, file_path):
-        """Generate xml report"""
+        """Generate and save XML report"""
         self.logger.debug('Generating XML report')
         report = self.zap.core.xmlreport(apikey=self.api_key)
-        self.write_report(report, file_path)
+        self._write_report(report, file_path)
 
     def html_report(self, file_path):
-        """Generate html report"""
+        """Generate and save HTML report."""
         self.logger.debug('Generating HTML report')
         report = self.zap.core.htmlreport(apikey=self.api_key)
-        self.write_report(report, file_path)
+        self._write_report(report, file_path)
 
-    def write_report(self, report, file_path):
+    @staticmethod
+    def _write_report(report, file_path):
+        """Write report to the given file path."""
         with open(file_path, 'w') as f:
             f.write(report)

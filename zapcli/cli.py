@@ -415,7 +415,7 @@ def exclude_from_scanners(zap_helper, pattern):
         zap_helper.exclude_from_all(pattern)
 
 
-@cli.command('report', short_help='Generate XML or HTML report.')
+@cli.command('report')
 @click.option('--output', '-o', help='Output file for report.')
 @click.option('--output-format', '-f', default='xml', type=click.Choice(['xml', 'html']),
               help='Report format.')
@@ -426,6 +426,8 @@ def report(zap_helper, output, output_format):
         zap_helper.html_report(output)
     else:
         zap_helper.xml_report(output)
+
+    console.info('Report saved to "{0}"'.format(output))
 
 
 def report_alerts(alerts, output_format='table'):
