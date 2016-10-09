@@ -299,6 +299,22 @@ class ZAPCliTestCase(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
+    @patch('zapcli.zap_helper.ZAPHelper.xml_report')
+    def test_xml_report(self, report_mock):
+        """Testing XML report."""
+        result = self.runner.invoke(cli.cli,
+                                    ['report', '-o', 'foo.xml', '-f', 'xml'])
+        report_mock.assert_called_with('foo.xml')
+        self.assertEqual(result.exit_code, 0)
+
+    @patch('zapcli.zap_helper.ZAPHelper.html_report')
+    def test_html_report(self, report_mock):
+        """Testing HTML report."""
+        result = self.runner.invoke(cli.cli,
+                                    ['report', '-o', 'foo.html', '-f', 'html'])
+        report_mock.assert_called_with('foo.html')
+        self.assertEqual(result.exit_code, 0)
+
 
 if __name__ == '__main__':
     unittest.main()
