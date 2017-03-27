@@ -1,6 +1,10 @@
 Release History
 ===============
 
+v0.5.0 (2017-03-27)
+-------------------
+* Add commands for managing scripts
+
 v0.4.0 (2016-10-09)
 -------------------
 * Add a report command to save a HTML or XML report
