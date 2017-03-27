@@ -242,6 +242,74 @@ class ZAPCliTestCase(unittest.TestCase):
         helper_mock.assert_called_with('[')
         self.assertEqual(result.exit_code, 1)
 
+    @patch('zapcli.zap_helper.ZAPHelper.enable_script')
+    def test_enable_script(self, helper_mock):
+        """Test command to enable a script."""
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'scripts', 'enable', 'Foo.js'])
+        helper_mock.assert_called_with('Foo.js')
+        self.assertEqual(result.exit_code, 0)
+
+    @patch('zapcli.zap_helper.ZAPHelper.enable_script')
+    def test_enable_script_error(self, helper_mock):
+        """Test command to enable a script with error raised."""
+        helper_mock.side_effect = ZAPError('error')
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'scripts', 'enable', 'Foo.js'])
+        helper_mock.assert_called_with('Foo.js')
+        self.assertEqual(result.exit_code, 1)
+
+    @patch('zapcli.zap_helper.ZAPHelper.disable_script')
+    def test_disable_script(self, helper_mock):
+        """Test command to disable a script."""
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'scripts', 'disable', 'Foo.js'])
+        helper_mock.assert_called_with('Foo.js')
+        self.assertEqual(result.exit_code, 0)
+
+    @patch('zapcli.zap_helper.ZAPHelper.disable_script')
+    def test_disable_script_error(self, helper_mock):
+        """Test command to disable a script with error raised."""
+        helper_mock.side_effect = ZAPError('error')
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'scripts', 'disable', 'Foo.js'])
+        helper_mock.assert_called_with('Foo.js')
+        self.assertEqual(result.exit_code, 1)
+
+    @patch('zapcli.zap_helper.ZAPHelper.remove_script')
+    def test_remove_script(self, helper_mock):
+        """Test command to remove a script."""
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'scripts', 'remove', 'Foo.js'])
+        helper_mock.assert_called_with('Foo.js')
+        self.assertEqual(result.exit_code, 0)
+
+    @patch('zapcli.zap_helper.ZAPHelper.remove_script')
+    def test_remove_script_error(self, helper_mock):
+        """Test command to remove a script with error raised."""
+        helper_mock.side_effect = ZAPError('error')
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'scripts', 'remove', 'Foo.js'])
+        helper_mock.assert_called_with('Foo.js')
+        self.assertEqual(result.exit_code, 1)
+
+    @patch('zapcli.zap_helper.ZAPHelper.load_script')
+    def test_load_script(self, helper_mock):
+        """Test command to load a script."""
+        script_name = 'Foo.js'
+        script_type = 'proxy'
+        engine = 'Oracle Nashorn'
+
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'scripts', 'load',
+                                              '--name', script_name, '--script-type', script_type,
+                                              '--engine', engine, '--file-path', script_name])
+        helper_mock.assert_called_with(name=script_name, script_type=script_type, engine=engine,
+                                       file_path=script_name, description='')
+        self.assertEqual(result.exit_code, 0)
+
+    @patch('zapcli.zap_helper.ZAPHelper.load_script')
+    def test_load_script_error(self, helper_mock):
+        """Test command to load a script with error raised."""
+        helper_mock.side_effect = ZAPError('error')
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'scripts', 'load',
+                                              '--name', 'Foo.js', '--script-type', 'proxy',
+                                              '--engine', 'Oracle Nashorn', '--file-path', 'Foo.js'])
+        self.assertEqual(result.exit_code, 1)
+
     @data(
         (
             [
