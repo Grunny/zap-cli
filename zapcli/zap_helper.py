@@ -331,6 +331,53 @@ class ZAPHelper(object):
         self.logger.debug('Loading session from "{0}"'.format(file_path))
         self.zap.core.load_session(file_path, apikey=self.api_key)
 
+    def is_valid_script_engine(self, engine):
+        """Check if given script engine is valid."""
+        engine_names = self.zap.script.list_engines
+        short_names = [e.split(' : ')[1] for e in engine_names]
+
+        return engine in engine_names or engine in short_names
+
+    def enable_script(self, script_name):
+        """Enable a given script."""
+        self.logger.debug('Enabling script "{0}"'.format(script_name))
+        result = self.zap.script.enable(script_name, apikey=self.api_key)
+
+        if result != 'OK':
+            raise ZAPError('Error enabling script: {0}'.format(result))
+
+    def disable_script(self, script_name):
+        """Disable a given script."""
+        self.logger.debug('Disabling script "{0}"'.format(script_name))
+        result = self.zap.script.disable(script_name, apikey=self.api_key)
+
+        if result != 'OK':
+            raise ZAPError('Error disabling script: {0}'.format(result))
+
+    def remove_script(self, script_name):
+        """Remove a given script."""
+        self.logger.debug('Removing script "{0}"'.format(script_name))
+        result = self.zap.script.remove(script_name, apikey=self.api_key)
+
+        if result != 'OK':
+            raise ZAPError('Error removing script: {0}'.format(result))
+
+    def load_script(self, name, script_type, engine, file_path, description=''):
+        """Load a given script."""
+        if not os.path.isfile(file_path):
+            raise ZAPError('No file found at "{0}", cannot load script.'.format(file_path))
+
+        if not self.is_valid_script_engine(engine):
+            engines = self.zap.script.list_engines
+            raise ZAPError('Invalid script engine provided. Valid engines are: {0}'.format(', '.join(engines)))
+
+        self.logger.debug('Loading script "{0}" from "{1}"'.format(name, file_path))
+        result = self.zap.script.load(name, script_type, engine, file_path,
+                                      scriptdescription=description, apikey=self.api_key)
+
+        if result != 'OK':
+            raise ZAPError('Error loading script: {0}'.format(result))
+
     def xml_report(self, file_path):
         """Generate and save XML report"""
         self.logger.debug('Generating XML report')

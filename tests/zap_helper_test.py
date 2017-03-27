@@ -506,6 +506,110 @@ class ZAPHelperTestCase(unittest.TestCase):
         self.zap_helper.load_session(file_path)
         session_mock.assert_called_with(file_path, apikey=self.api_key)
 
+    @patch('zapv2.script.enable')
+    def test_enable_script(self, script_mock):
+        """Test enabling a script."""
+        script_name = 'Foo.js'
+        script_mock.return_value = 'OK'
+        self.zap_helper.enable_script(script_name)
+        script_mock.assert_called_with(script_name, apikey=self.api_key)
+
+    @patch('zapv2.script.enable')
+    def test_enable_script_error(self, script_mock):
+        """Test an error is raised when failing to enable a script."""
+        script_name = 'Foo.js'
+        script_mock.return_value = 'Does Not Exist'
+        with self.assertRaises(ZAPError):
+            self.zap_helper.enable_script(script_name)
+
+    @patch('zapv2.script.disable')
+    def test_disable_script(self, script_mock):
+        """Test disabling a script."""
+        script_name = 'Foo.js'
+        script_mock.return_value = 'OK'
+        self.zap_helper.disable_script(script_name)
+        script_mock.assert_called_with(script_name, apikey=self.api_key)
+
+    @patch('zapv2.script.disable')
+    def test_disable_script_error(self, script_mock):
+        """Test an error is raised when failing to disable a script."""
+        script_name = 'Foo.js'
+        script_mock.return_value = 'Does Not Exist'
+        with self.assertRaises(ZAPError):
+            self.zap_helper.disable_script(script_name)
+
+    @patch('zapv2.script.remove')
+    def test_remove_script(self, script_mock):
+        """Test removing a script."""
+        script_name = 'Foo.js'
+        script_mock.return_value = 'OK'
+        self.zap_helper.remove_script(script_name)
+        script_mock.assert_called_with(script_name, apikey=self.api_key)
+
+    @patch('zapv2.script.remove')
+    def test_remove_script_error(self, script_mock):
+        """Test an error is raised when failing to remove a script."""
+        script_name = 'Foo.js'
+        script_mock.return_value = 'Does Not Exist'
+        with self.assertRaises(ZAPError):
+            self.zap_helper.remove_script(script_name)
+
+    @patch('os.path.isfile')
+    def test_load_script(self, isfile_mock):
+        """Test loading a script from a file."""
+        isfile_mock.return_value = True
+
+        valid_engines = ['ECMAScript : Oracle Nashorn']
+        class_mock = MagicMock()
+        class_mock.load.return_value = 'OK'
+        engines = PropertyMock(return_value=valid_engines)
+        type(class_mock).list_engines = engines
+        self.zap_helper.zap.script = class_mock
+
+        script_name = 'Foo.js'
+        script_type = 'proxy'
+        engine = 'Oracle Nashorn'
+
+        self.zap_helper.load_script(script_name, script_type, engine, script_name)
+        class_mock.load.assert_called_with(script_name, script_type, engine, script_name,
+                                           scriptdescription='', apikey=self.api_key)
+
+    @patch('os.path.isfile')
+    def test_load_script_file_error(self, isfile_mock):
+        """Test loading a script from a file that does not exist."""
+        isfile_mock.return_value = False
+        with self.assertRaises(ZAPError):
+            self.zap_helper.load_script('Foo.js', 'proxy', 'Oracle Nashorn', '/path/to/Foo.js')
+
+    @patch('os.path.isfile')
+    def test_load_script_engine_error(self, isfile_mock):
+        """Test loading a script using an invalid engine."""
+        isfile_mock.return_value = True
+
+        valid_engines = ['ECMAScript : Oracle Nashorn']
+        class_mock = MagicMock()
+        engines = PropertyMock(return_value=valid_engines)
+        type(class_mock).list_engines = engines
+        self.zap_helper.zap.script = class_mock
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.load_script('Foo.js', 'proxy', 'Invalid Engine', '/path/to/Foo.js')
+
+    @patch('os.path.isfile')
+    def test_load_script_unknown_error(self, isfile_mock):
+        """Test loading a script with an unknown error returned."""
+        isfile_mock.return_value = True
+
+        valid_engines = ['ECMAScript : Oracle Nashorn']
+        class_mock = MagicMock()
+        class_mock.load.return_value = 'Internal Error'
+        engines = PropertyMock(return_value=valid_engines)
+        type(class_mock).list_engines = engines
+        self.zap_helper.zap.script = class_mock
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.load_script('Foo.js', 'proxy', 'Oracle Nashorn', '/path/to/Foo.js')
+
     @patch('os.path.isfile')
     @patch('zapv2.core.load_session')
     def test_load_session_error(self, session_mock, isfile_mock):

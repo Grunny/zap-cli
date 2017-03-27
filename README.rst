@@ -68,6 +68,7 @@ ZAP CLI can then be used with the following commands:
       quick-scan   Run a quick scan.
       report       Generate XML or HTML report.
       scanners     Enable, disable, or list a set of scanners.
+      scripts      Manage scripts.
       session      Manage sessions.
       shutdown     Shutdown the ZAP daemon.
       spider       Run the spider against a URL.
