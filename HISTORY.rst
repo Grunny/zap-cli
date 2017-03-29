@@ -1,6 +1,10 @@
 Release History
 ===============
 
+v0.6.0 (2017-03-29)
+-------------------
+* Update zap-cli to support ZAP 2.6.0
+
 v0.5.0 (2017-03-27)
 -------------------
 * Add commands for managing scripts
