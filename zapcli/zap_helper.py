@@ -43,7 +43,7 @@ class ZAPHelper(object):
         self.zap_path = zap_path
         self.port = port
         self.proxy_url = '{0}:{1}'.format(url, self.port)
-        self.zap = ZAPv2(proxies={'http': self.proxy_url, 'https': self.proxy_url})
+        self.zap = ZAPv2(proxies={'http': self.proxy_url, 'https': self.proxy_url}, apikey=api_key)
         self.api_key = api_key
         self.logger = logger or console
 
