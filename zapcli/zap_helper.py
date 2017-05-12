@@ -10,8 +10,9 @@ import re
 import shlex
 import subprocess
 import time
-import urllib2
 
+import requests
+from requests.exceptions import RequestException
 from zapv2 import ZAPv2
 
 from zapcli.exceptions import ZAPError
@@ -50,7 +51,7 @@ class ZAPHelper(object):
     @property
     def scanner_groups(self):
         """Available scanner groups."""
-        return ['all'] + self.scanner_group_map.keys()
+        return ['all'] + list(self.scanner_group_map.keys())
 
     def start(self, options=None):
         """Start the ZAP Daemon."""
@@ -115,11 +116,11 @@ class ZAPHelper(object):
     def is_running(self):
         """Check if ZAP is running."""
         try:
-            result = urllib2.urlopen(self.proxy_url)
-        except urllib2.URLError:
+            result = requests.get(self.proxy_url)
+        except RequestException:
             return False
 
-        if 'ZAP-Header' in result.info().get('Access-Control-Allow-Headers', []):
+        if 'ZAP-Header' in result.headers.get('Access-Control-Allow-Headers', []):
             return True
 
         raise ZAPError('Another process is listening on {0}'.format(self.proxy_url))

@@ -25,7 +25,7 @@ def scanner_group(ctx):
 @click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
               help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
               'subcommand to get a list of IDs. Available groups are: {0}.'.format(
-                  ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
+                  ', '.join(['all'] + list(ZAPHelper.scanner_group_map.keys()))))
 @click.pass_obj
 def list_scanners(zap_helper, scanners):
     """Get a list of scanners and whether or not they are enabled."""
@@ -44,7 +44,7 @@ def list_scanners(zap_helper, scanners):
 @click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
               help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
               'subcommand to get a list of IDs. Available groups are: {0}.'.format(
-                  ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
+                  ', '.join(['all'] + list(ZAPHelper.scanner_group_map.keys()))))
 @click.pass_obj
 def enable_scanners(zap_helper, scanners):
     """Enable scanners to use in a scan."""
@@ -56,7 +56,7 @@ def enable_scanners(zap_helper, scanners):
 @click.option('--scanners', '-s', type=str, callback=validate_scanner_list,
               help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
               'subcommand to get a list of IDs. Available groups are: {0}.'.format(
-                  ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
+                  ', '.join(['all'] + list(ZAPHelper.scanner_group_map.keys()))))
 @click.pass_obj
 def disable_scanners(zap_helper, scanners):
     """Disable scanners so they are not used in a scan."""

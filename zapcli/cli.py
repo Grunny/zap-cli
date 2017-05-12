@@ -125,7 +125,7 @@ def ajax_spider_url(zap_helper, url):
 @click.option('--scanners', '-s', type=str, callback=helpers.validate_scanner_list,
               help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
               'subcommand to get a list of IDs. Available groups are: {0}.'.format(
-                  ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
+                  ', '.join(['all'] + list(ZAPHelper.scanner_group_map.keys()))))
 @click.option('--recursive', '-r', is_flag=True, default=False, help='Make scan recursive.')
 @click.pass_obj
 def active_scan(zap_helper, url, scanners, recursive):
@@ -171,7 +171,7 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
 @click.option('--scanners', '-s', type=str, callback=helpers.validate_scanner_list,
               help='Comma separated list of scanner IDs and/or groups to use in the scan. Use the scanners ' +
               'subcommand to get a list of IDs. Available groups are: {0}.'.format(
-                  ', '.join(['all'] + ZAPHelper.scanner_group_map.keys())))
+                  ', '.join(['all'] + list(ZAPHelper.scanner_group_map.keys()))))
 @click.option('--spider', is_flag=True, default=False, help='If set, run the spider before running the scan.')
 @click.option('--ajax-spider', is_flag=True, default=False, help='If set, run the AJAX Spider before running the scan.')
 @click.option('--recursive', '-r', is_flag=True, default=False, help='Make scan recursive.')
