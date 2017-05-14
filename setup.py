@@ -31,10 +31,12 @@ setup(
     license='MIT',
     packages=[
         'zapcli',
+        'zapcli.commands',
     ],
     install_requires=[
         'click==4.0',
-        'python-owasp-zap-v2.4==0.0.9',
+        'python-owasp-zap-v2.4==0.0.10',
+        'requests==2.13.0',
         'tabulate==0.7.5',
         'termcolor==1.1.0',
     ],
@@ -45,7 +47,8 @@ setup(
             'mock==2.0.0',
             'pep8==1.6.2',
             'pylint==1.5.5',
-            'pytest==2.9.1',
+            'pytest==3.0.7',
+            'responses==0.5.1',
         ],
     },
     include_package_data=True,

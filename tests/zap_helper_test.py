@@ -7,10 +7,12 @@ Tests for the ZAP CLI helper.
 import shlex
 import subprocess
 import unittest
-import urllib2
 
 from ddt import ddt, data, unpack
 from mock import PropertyMock, Mock, MagicMock, mock_open, patch
+import requests
+from requests.exceptions import ConnectionError
+import responses
 
 from zapcli import zap_helper
 from zapcli.exceptions import ZAPError
@@ -91,11 +93,13 @@ class ZAPHelperTestCase(unittest.TestCase):
         expected_command = shlex.split('zap.sh -daemon -port 8090 {0}'.format(extra_options))
         popen_mock.assert_called_with(expected_command, cwd='', stderr=subprocess.STDOUT, stdout=file_open_mock())
 
+    @patch('platform.system')
     @patch('subprocess.Popen')
-    def test_start_timeout(self, popen_mock):
+    def test_start_timeout(self, popen_mock, platform_mock):
         """Test trying to start ZAP when the daemon is already running."""
         self.zap_helper.is_running = Mock(return_value=False)
         self.zap_helper.timeout = 0
+        platform_mock.return_value = 'Linux'
 
         file_open_mock = mock_open()
         with patch('zapcli.zap_helper.open', file_open_mock, create=True):
@@ -111,12 +115,14 @@ class ZAPHelperTestCase(unittest.TestCase):
 
         self.assertFalse(popen_mock.called)
 
+    @patch('platform.system')
     @patch('subprocess.Popen')
     @patch('os.path.isfile')
-    def test_start_not_found(self, isfile_mock, popen_mock):
+    def test_start_not_found(self, isfile_mock, popen_mock, platform_mock):
         """Test trying to start ZAP when the ZAP executable is not found."""
         self.zap_helper.is_running = Mock(return_value=False)
         isfile_mock.return_value = False
+        platform_mock.return_value = 'Linux'
 
         with self.assertRaises(ZAPError):
             self.zap_helper.start()
@@ -157,36 +163,30 @@ class ZAPHelperTestCase(unittest.TestCase):
 
         self.assertFalse(shutdown_mock.called)
 
-    @patch('urllib2.urlopen')
-    def test_is_running(self, urlopen_mock):
+    @responses.activate
+    def test_is_running(self):
         """Test the check if ZAP is running."""
-        header_mock = Mock()
-        header_mock.get.return_value = 'ZAP-Header'
-        urlopen_result_mock = Mock()
-        urlopen_result_mock.info.return_value = header_mock
-        urlopen_mock.return_value = urlopen_result_mock
+        responses.add(responses.GET, 'http://127.0.0.1:8090',
+                      adding_headers={'Access-Control-Allow-Headers': 'ZAP-Header'})
 
         result = self.zap_helper.is_running()
 
         self.assertTrue(result)
 
-    @patch('urllib2.urlopen')
-    def test_is_not_running(self, urlopen_mock):
+    @responses.activate
+    def test_is_not_running(self):
         """Test the check if ZAP is running when it isn't."""
-        urlopen_mock.side_effect = urllib2.URLError('[Errno 111] Connection refused')
+        responses.add(responses.GET, 'http://127.0.0.1:8090',
+                      body=ConnectionError('[Errno 111] Connection refused'))
 
         result = self.zap_helper.is_running()
 
         self.assertFalse(result)
 
-    @patch('urllib2.urlopen')
-    def test_is_not_running_error(self, urlopen_mock):
+    @responses.activate
+    def test_is_not_running_error(self):
         """Test that an exception is raised when something else is listening on the port set for ZAP."""
-        header_mock = Mock()
-        header_mock.get.return_value = []
-        urlopen_result_mock = Mock()
-        urlopen_result_mock.info.return_value = header_mock
-        urlopen_mock.return_value = urlopen_result_mock
+        responses.add(responses.GET, 'http://127.0.0.1:8090')
 
         with self.assertRaises(ZAPError):
             self.zap_helper.is_running()
