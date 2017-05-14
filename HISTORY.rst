@@ -1,6 +1,10 @@
 Release History
 ===============
 
+v0.7.0 (2017-05-14)
+-------------------
+* Update zap-cli to support Python 3.5
+
 v0.6.0 (2017-03-29)
 -------------------
 * Update zap-cli to support ZAP 2.6.0
