@@ -181,6 +181,8 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
 @click.option('--start-options', '-o', type=str,
               help='Extra options to pass to the ZAP start command when the --self-contained option is used, ' +
               ' e.g. "-config api.key=12345"')
+@click.option('--output-format', '-f', default='table', type=click.Choice(['table', 'json']),
+              help='Output format to print the alerts.')
 @click.pass_obj
 def quick_scan(zap_helper, url, **options):
     """
@@ -218,7 +220,7 @@ def quick_scan(zap_helper, url, **options):
 
     num_alerts = len(alerts)
 
-    helpers.report_alerts(alerts)
+    helpers.report_alerts(alerts, options['output_format'])
 
     if options['self_contained']:
         console.info('Shutting down ZAP daemon')
