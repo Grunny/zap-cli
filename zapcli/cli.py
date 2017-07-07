@@ -164,7 +164,7 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
 
 
 @cli.command('quick-scan', short_help='Run a quick scan.')
-@click.argument('url')
+@click.argument('urls', nargs=-1)
 @click.option('--self-contained', '-sc', is_flag=True, default=False,
               help='Make the scan self-contained, i.e. start the daemon, open the URL, scan it, ' +
               'and shutdown the daemon when done.')
@@ -184,7 +184,7 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
 @click.option('--output-format', '-f', default='table', type=click.Choice(['table', 'json']),
               help='Output format to print the alerts.')
 @click.pass_obj
-def quick_scan(zap_helper, url, **options):
+def quick_scan(zap_helper, urls, **options):
     """
     Run a quick scan of a site by opening a URL, optionally spidering the URL,
     running an Active Scan, and reporting any issues found.
@@ -197,7 +197,7 @@ def quick_scan(zap_helper, url, **options):
         with helpers.zap_error_handler():
             zap_helper.start(options['start_options'])
 
-    console.info('Running a quick scan for {0}'.format(url))
+    console.info('Running a quick scan for {0}'.format(', '.join(urls)))
 
     with helpers.zap_error_handler():
         if options['scanners']:
@@ -206,15 +206,15 @@ def quick_scan(zap_helper, url, **options):
         if options['exclude']:
             zap_helper.exclude_from_all(options['exclude'])
 
-        zap_helper.open_url(url)
+        [ zap_helper.open_url(url) for url in urls ]
 
         if options['spider']:
-            zap_helper.run_spider(url)
+            [ zap_helper.run_spider(url) for url in urls ]
 
         if options['ajax_spider']:
-            zap_helper.run_ajax_spider(url)
+            [ zap_helper.run_ajax_spider(url) for url in urls ]
 
-        zap_helper.run_active_scan(url, recursive=options['recursive'])
+        [ zap_helper.run_active_scan(url, recursive=options['recursive']) for url in urls ]
 
     alerts = zap_helper.alerts(options['alert_level'])
 
