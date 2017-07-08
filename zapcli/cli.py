@@ -206,15 +206,15 @@ def quick_scan(zap_helper, urls, **options):
         if options['exclude']:
             zap_helper.exclude_from_all(options['exclude'])
 
-        [zap_helper.open_url(url) for url in urls]
+        map(zap_helper.open_url, urls)
 
         if options['spider']:
-            [zap_helper.run_spider(url) for url in urls]
+            map(zap_helper.run_spider, urls)
 
         if options['ajax_spider']:
-            [zap_helper.run_ajax_spider(url) for url in urls]
+            map(zap_helper.run_ajax_spider, urls)
 
-        [zap_helper.run_active_scan(url, recursive=options['recursive']) for url in urls]
+        _ = [zap_helper.run_active_scan(url, recursive=options['recursive']) for url in urls]
 
     alerts = zap_helper.alerts(options['alert_level'])
 
