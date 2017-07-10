@@ -7,12 +7,14 @@ Tests for the ZAP CLI helper.
 import shlex
 import subprocess
 import unittest
+from six import binary_type
 
 from ddt import ddt, data, unpack
 from mock import PropertyMock, Mock, MagicMock, mock_open, patch
 import requests
 from requests.exceptions import ConnectionError
 import responses
+import six
 
 from zapcli import zap_helper
 from zapcli.exceptions import ZAPError
@@ -634,7 +636,9 @@ class ZAPHelperTestCase(unittest.TestCase):
             self.zap_helper.xml_report(file_path)
 
         xmlreport_mock.assert_called_with(apikey=self.api_key)
-        file_open_mock.assert_called_with(file_path, 'w')
+        file_open_mock.assert_called_with(file_path, mode='wb')
+        if not isinstance(report_str, binary_type):
+            report_str = report_str.encode('utf-8')
         file_open_mock().write.assert_called_with(report_str)
 
     @patch('zapv2.core.htmlreport')
@@ -649,7 +653,9 @@ class ZAPHelperTestCase(unittest.TestCase):
             self.zap_helper.html_report(file_path)
 
         htmlreport_mock.assert_called_with(apikey=self.api_key)
-        file_open_mock.assert_called_with(file_path, 'w')
+        file_open_mock.assert_called_with(file_path, mode='wb')
+        if not isinstance(report_str, binary_type):
+            report_str = report_str.encode('utf-8')
         file_open_mock().write.assert_called_with(report_str)
 
 

@@ -10,6 +10,7 @@ import re
 import shlex
 import subprocess
 import time
+from six import binary_type
 
 import requests
 from requests.exceptions import RequestException
@@ -394,5 +395,7 @@ class ZAPHelper(object):
     @staticmethod
     def _write_report(report, file_path):
         """Write report to the given file path."""
-        with open(file_path, 'w') as f:
+        with open(file_path, mode='wb') as f:
+            if not isinstance(report, binary_type):
+                report = report.encode('utf-8')
             f.write(report)
