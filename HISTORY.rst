@@ -1,6 +1,11 @@
 Release History
 ===============
 
+v0.8.0 (2017-07-11)
+-------------------
+* Fix support for unicode characters in reports
+* Add JSON output format to quick-scan
+
 v0.7.0 (2017-05-14)
 -------------------
 * Update zap-cli to support Python 3.5
