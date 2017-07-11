@@ -39,6 +39,7 @@ setup(
         'requests==2.13.0',
         'tabulate==0.7.5',
         'termcolor==1.1.0',
+        'six==1.10.0',
     ],
     extras_require={
         'dev': [
