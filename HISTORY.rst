@@ -1,6 +1,10 @@
 Release History
 ===============
 
+v0.8.1 (2017-07-20)
+-------------------
+* Upgrade python-owasp-zap-v2.4 dependency to 0.0.11
+
 v0.8.0 (2017-07-11)
 -------------------
 * Fix support for unicode characters in reports
