@@ -34,12 +34,12 @@ setup(
         'zapcli.commands',
     ],
     install_requires=[
-        'click==4.0',
-        'python-owasp-zap-v2.4==0.0.11',
-        'requests==2.13.0',
-        'tabulate==0.7.5',
-        'termcolor==1.1.0',
-        'six==1.10.0',
+        'click>=4.0,<5',
+        'python-owasp-zap-v2.4>=0.0.11,<0.1',
+        'requests>=2.13.0,<3',
+        'tabulate>=0.7.5,<0.8',
+        'termcolor>=1.1.0,<2',
+        'six>=1.10.0,<2',
     ],
     extras_require={
         'dev': [
