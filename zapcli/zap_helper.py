@@ -38,6 +38,7 @@ class ZAPHelper(object):
     }
 
     timeout = 60
+    _status_check_sleep = 10
 
     def __init__(self, zap_path='', port=8090, url='http://127.0.0.1', api_key='', logger=None):
         if os.path.isfile(zap_path):
@@ -132,11 +133,17 @@ class ZAPHelper(object):
         # Give the sites tree a chance to get updated
         time.sleep(sleep_after_open)
 
-    def run_spider(self, target_url, status_check_sleep=10):
+    def run_spider(self, target_url, context_name=None, user_name=None):
         """Run spider against a URL."""
         self.logger.debug('Spidering target {0}...'.format(target_url))
 
-        scan_id = self.zap.spider.scan(target_url, apikey=self.api_key)
+        context_id, user_id = self._get_context_and_user_ids(context_name, user_name)
+
+        if user_id:
+            self.logger.debug('Running spider in context {0} as user {1}'.format(context_id, user_id))
+            scan_id = self.zap.spider.scan_as_user(context_id, user_id, target_url, apikey=self.api_key)
+        else:
+            scan_id = self.zap.spider.scan(target_url, apikey=self.api_key)
 
         if not scan_id:
             raise ZAPError('Error running spider.')
@@ -147,15 +154,21 @@ class ZAPHelper(object):
 
         while int(self.zap.spider.status()) < 100:
             self.logger.debug('Spider progress %: {0}'.format(self.zap.spider.status()))
-            time.sleep(status_check_sleep)
+            time.sleep(self._status_check_sleep)
 
         self.logger.debug('Spider #{0} completed'.format(scan_id))
 
-    def run_active_scan(self, target_url, recursive=False, status_check_sleep=10):
+    def run_active_scan(self, target_url, recursive=False, context_name=None, user_name=None):
         """Run an active scan against a URL."""
         self.logger.debug('Scanning target {0}...'.format(target_url))
 
-        scan_id = self.zap.ascan.scan(target_url, recurse=recursive, apikey=self.api_key)
+        context_id, user_id = self._get_context_and_user_ids(context_name, user_name)
+
+        if user_id:
+            self.logger.debug('Scanning in context {0} as user {1}'.format(context_id, user_id))
+            scan_id = self.zap.ascan.scan_as_user(target_url, context_id, user_id, recursive, apikey=self.api_key)
+        else:
+            scan_id = self.zap.ascan.scan(target_url, recurse=recursive, apikey=self.api_key)
 
         if not scan_id:
             raise ZAPError('Error running active scan.')
@@ -168,11 +181,11 @@ class ZAPHelper(object):
 
         while int(self.zap.ascan.status()) < 100:
             self.logger.debug('Scan progress %: {0}'.format(self.zap.ascan.status()))
-            time.sleep(status_check_sleep)
+            time.sleep(self._status_check_sleep)
 
         self.logger.debug('Scan #{0} completed'.format(scan_id))
 
-    def run_ajax_spider(self, target_url, status_check_sleep=10):
+    def run_ajax_spider(self, target_url):
         """Run AJAX Spider against a URL."""
         self.logger.debug('AJAX Spidering target {0}...'.format(target_url))
 
@@ -180,7 +193,7 @@ class ZAPHelper(object):
 
         while self.zap.ajaxSpider.status == 'running':
             self.logger.debug('AJAX Spider: {0}'.format(self.zap.ajaxSpider.status))
-            time.sleep(status_check_sleep)
+            time.sleep(self._status_check_sleep)
 
         self.logger.debug('AJAX Spider completed')
 
@@ -399,3 +412,74 @@ class ZAPHelper(object):
             if not isinstance(report, binary_type):
                 report = report.encode('utf-8')
             f.write(report)
+
+    def new_context(self, context_name):
+        """Create a new context with the given name."""
+        return self.zap.context.new_context(contextname=context_name, apikey=self.api_key)
+
+    def include_in_context(self, context_name, regex):
+        """Add include regex to context."""
+        try:
+            re.compile(regex)
+        except re.error:
+            raise ZAPError('Invalid regex "{0}" provided'.format(regex))
+
+        result = self.zap.context.include_in_context(contextname=context_name, regex=regex, apikey=self.api_key)
+
+        if result != 'OK':
+            raise ZAPError('Including regex from context failed: {}'.format(result))
+
+    def exclude_from_context(self, context_name, regex):
+        """Add exclude regex to context."""
+        try:
+            re.compile(regex)
+        except re.error:
+            raise ZAPError('Invalid regex "{0}" provided'.format(regex))
+
+        result = self.zap.context.exclude_from_context(contextname=context_name, regex=regex, apikey=self.api_key)
+
+        if result != 'OK':
+            raise ZAPError('Excluding regex from context failed: {}'.format(result))
+
+    def get_context_info(self, context_name):
+        """Get the context ID for a given context name."""
+        context_info = self.zap.context.context(context_name)
+        if not isinstance(context_info, dict):
+            raise ZAPError('Context with name "{0}" wasn\'t found'.format(context_name))
+
+        return context_info
+
+    def import_context(self, file_path):
+        """Import a context from a file."""
+        result = self.zap.context.import_context(file_path, apikey=self.api_key)
+
+        if not result.isdigit():
+            raise ZAPError('Importing context from file failed: {}'.format(result))
+
+    def export_context(self, context_name, file_path):
+        """Export a given context to a file."""
+        result = self.zap.context.export_context(context_name, file_path, apikey=self.api_key)
+
+        if result != 'OK':
+            raise ZAPError('Exporting context to file failed: {}'.format(result))
+
+    def _get_context_and_user_ids(self, context_name, user_name):
+        """Helper to get the context ID and user ID from the given names."""
+        if context_name is None:
+            return None, None
+
+        context_id = self.get_context_info(context_name)['id']
+        user_id = None
+        if user_name:
+            user_id = self._get_user_id_from_name(context_id, user_name)
+
+        return context_id, user_id
+
+    def _get_user_id_from_name(self, context_id, user_name):
+        """Get a user ID from the user name."""
+        users = self.zap.users.users_list(context_id)
+        for user in users:
+            if user['name'] == user_name:
+                return user['id']
+
+        raise ZAPError('No user with the name "{0}"" was found for context {1}'.format(user_name, context_id))

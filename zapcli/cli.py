@@ -8,6 +8,7 @@ import click
 
 from zapcli import __version__
 from zapcli import helpers
+from zapcli.commands.context import context_group
 from zapcli.commands.policies import policies_group
 from zapcli.commands.scanners import scanner_group
 from zapcli.commands.scripts import scripts_group
@@ -103,12 +104,16 @@ def open_url(zap_helper, url):
 
 @cli.command('spider')
 @click.argument('url')
+@click.option('--context-name', '-c', type=str, help='Context to use if provided.')
+@click.option('--user-name', '-u', type=str,
+              help='User to run scan as if provided. If this option is used, the context parameter must also ' +
+              'be provided.')
 @click.pass_obj
-def spider_url(zap_helper, url):
+def spider_url(zap_helper, url, context_name, user_name):
     """Run the spider against a URL."""
     console.info('Running spider...')
     with helpers.zap_error_handler():
-        zap_helper.run_spider(url)
+        zap_helper.run_spider(url, context_name, user_name)
 
 
 @cli.command('ajax-spider')
@@ -127,8 +132,12 @@ def ajax_spider_url(zap_helper, url):
               'subcommand to get a list of IDs. Available groups are: {0}.'.format(
                   ', '.join(['all'] + list(ZAPHelper.scanner_group_map.keys()))))
 @click.option('--recursive', '-r', is_flag=True, default=False, help='Make scan recursive.')
+@click.option('--context-name', '-c', type=str, help='Context to use if provided.')
+@click.option('--user-name', '-u', type=str,
+              help='User to run scan as if provided. If this option is used, the context parameter must also ' +
+              'be provided.')
 @click.pass_obj
-def active_scan(zap_helper, url, scanners, recursive):
+def active_scan(zap_helper, url, scanners, recursive, context_name, user_name):
     """
     Run an Active Scan against a URL.
 
@@ -141,7 +150,7 @@ def active_scan(zap_helper, url, scanners, recursive):
         if scanners:
             zap_helper.set_enabled_scanners(scanners)
 
-        zap_helper.run_active_scan(url, recursive=recursive)
+        zap_helper.run_active_scan(url, recursive, context_name, user_name)
 
 
 @cli.command('alerts')
@@ -183,6 +192,10 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
               ' e.g. "-config api.key=12345"')
 @click.option('--output-format', '-f', default='table', type=click.Choice(['table', 'json']),
               help='Output format to print the alerts.')
+@click.option('--context-name', '-c', type=str, help='Context to use if provided.')
+@click.option('--user-name', '-u', type=str,
+              help='User to run scan as if provided. If this option is used, the context parameter must also ' +
+              'be provided.')
 @click.pass_obj
 def quick_scan(zap_helper, url, **options):
     """
@@ -209,12 +222,12 @@ def quick_scan(zap_helper, url, **options):
         zap_helper.open_url(url)
 
         if options['spider']:
-            zap_helper.run_spider(url)
+            zap_helper.run_spider(url, options['context_name'], options['user_name'])
 
         if options['ajax_spider']:
             zap_helper.run_ajax_spider(url)
 
-        zap_helper.run_active_scan(url, recursive=options['recursive'])
+        zap_helper.run_active_scan(url, options['recursive'], options['context_name'], options['user_name'])
 
     alerts = zap_helper.alerts(options['alert_level'])
 
@@ -255,6 +268,7 @@ def report(zap_helper, output, output_format):
 
 
 # Add subcommand groups
+cli.add_command(context_group)
 cli.add_command(policies_group)
 cli.add_command(scanner_group)
 cli.add_command(scripts_group)

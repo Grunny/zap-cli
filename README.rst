@@ -62,6 +62,7 @@ ZAP CLI can then be used with the following commands:
       active-scan  Run an Active Scan.
       ajax-spider  Run the AJAX Spider against a URL.
       alerts       Show alerts at the given alert level.
+      context      Manage contexts for the current session.
       exclude      Exclude a pattern from all scanners.
       open-url     Open a URL using the ZAP proxy.
       policies     Enable or list a set of policies.
