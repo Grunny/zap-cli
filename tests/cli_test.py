@@ -110,7 +110,7 @@ class ZAPCliTestCase(unittest.TestCase):
     def test_spider_url(self, helper_mock):
         """Test spider URL method."""
         result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', 'spider', 'http://localhost/'])
-        helper_mock.assert_called_with('http://localhost/')
+        helper_mock.assert_called_with('http://localhost/', None, None)
         self.assertEqual(result.exit_code, 0)
 
     @patch('zapcli.zap_helper.ZAPHelper.run_spider')
@@ -310,6 +310,32 @@ class ZAPCliTestCase(unittest.TestCase):
                                     ['report', '-o', 'foo.html', '-f', 'html'])
         report_mock.assert_called_with('foo.html')
         self.assertEqual(result.exit_code, 0)
+
+    @patch('zapcli.zap_helper.ZAPHelper.include_in_context')
+    def test_context_include(self, helper_mock):
+        """Testing including a regex in a given context."""
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'context',
+                                              'include', '--name', 'Test', '--pattern', 'zap-cli'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_context_include_error(self):
+        """Testing that an error is reported when providing an invalid regex."""
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'context',
+                                              'include', '--name', 'Test', '--pattern', '['])
+        self.assertEqual(result.exit_code, 1)
+
+    @patch('zapcli.zap_helper.ZAPHelper.exclude_from_context')
+    def test_context_exclude(self, helper_mock):
+        """Testing excluding a regex from a given context."""
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'context',
+                                              'exclude', '--name', 'Test', '--pattern', 'zap-cli'])
+        self.assertEqual(result.exit_code, 0)
+
+    def test_context_exclude_error(self):
+        """Testing that an error is reported when providing an invalid regex."""
+        result = self.runner.invoke(cli.cli, ['--boring', '--api-key', '', '--verbose', 'context',
+                                              'exclude', '--name', 'Test', '--pattern', '['])
+        self.assertEqual(result.exit_code, 1)
 
 
 if __name__ == '__main__':

@@ -27,6 +27,7 @@ class ZAPHelperTestCase(unittest.TestCase):
 
     def setUp(self):
         self.zap_helper = zap_helper.ZAPHelper(api_key=self.api_key)
+        self.zap_helper._status_check_sleep = 0
 
     @data(
         (
@@ -218,7 +219,7 @@ class ZAPHelperTestCase(unittest.TestCase):
         class_mock.status = status
         self.zap_helper.zap.spider = class_mock
 
-        self.zap_helper.run_spider('http://localhost', status_check_sleep=0)
+        self.zap_helper.run_spider('http://localhost')
 
     def test_run_spider_error(self):
         """Test running the spider when an error occurs."""
@@ -227,7 +228,44 @@ class ZAPHelperTestCase(unittest.TestCase):
         self.zap_helper.zap.spider = class_mock
 
         with self.assertRaises(ZAPError):
-            self.zap_helper.run_spider('http://localhost', status_check_sleep=0)
+            self.zap_helper.run_spider('http://localhost')
+
+    def test_run_spider_as_user(self):
+        """Test running the spider as a given user."""
+        def status_result():
+            """Return value of the status property."""
+            if status.call_count > 2:
+                return '100'
+            return '50'
+
+        class_mock = MagicMock()
+        class_mock.scan_as_user.return_value = '1'
+        status = Mock(side_effect=status_result)
+        class_mock.status = status
+        self.zap_helper.zap.spider = class_mock
+        self.zap_helper.zap.context.context = Mock(return_value={'id': '1'})
+        self.zap_helper.zap.users.users_list = Mock(return_value=[{'name': 'Test', 'id': '1'}])
+
+        self.zap_helper.run_spider('http://localhost', 'Test', 'Test')
+
+    def test_run_spider_as_user_error(self):
+        """Test running the spider as a given user when an error occurs."""
+        def status_result():
+            """Return value of the status property."""
+            if status.call_count > 2:
+                return '100'
+            return '50'
+
+        class_mock = MagicMock()
+        class_mock.scan_as_user.return_value = '1'
+        status = Mock(side_effect=status_result)
+        class_mock.status = status
+        self.zap_helper.zap.spider = class_mock
+        self.zap_helper.zap.context.context = Mock(return_value={'id': '1'})
+        self.zap_helper.zap.users.users_list = Mock(return_value=[])
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.run_spider('http://localhost', 'Test', 'Test')
 
     def test_run_active_scan(self):
         """Test running an active scan."""
@@ -243,7 +281,25 @@ class ZAPHelperTestCase(unittest.TestCase):
         class_mock.status = status
         self.zap_helper.zap.ascan = class_mock
 
-        self.zap_helper.run_active_scan('http://localhost', status_check_sleep=0)
+        self.zap_helper.run_active_scan('http://localhost')
+
+    def test_run_active_scan_as_user(self):
+        """Test running an active scan as a given user."""
+        def status_result():
+            """Return value of the status property."""
+            if status.call_count > 2:
+                return '100'
+            return '50'
+
+        class_mock = MagicMock()
+        class_mock.scan_as_user.return_value = '1'
+        status = Mock(side_effect=status_result)
+        class_mock.status = status
+        self.zap_helper.zap.ascan = class_mock
+        self.zap_helper.zap.context.context = Mock(return_value={'id': '1'})
+        self.zap_helper.zap.users.users_list = Mock(return_value=[{'name': 'Test', 'id': '1'}])
+
+        self.zap_helper.run_active_scan('http://localhost', False, 'Test', 'Test')
 
     def test_run_active_scan_error(self):
         """Test running an active scan."""
@@ -276,7 +332,7 @@ class ZAPHelperTestCase(unittest.TestCase):
         type(class_mock).status = status
         self.zap_helper.zap.ajaxSpider = class_mock
 
-        self.zap_helper.run_ajax_spider('http://localhost', status_check_sleep=0)
+        self.zap_helper.run_ajax_spider('http://localhost')
 
     @data(
         (
@@ -657,6 +713,110 @@ class ZAPHelperTestCase(unittest.TestCase):
         if not isinstance(report_str, binary_type):
             report_str = report_str.encode('utf-8')
         file_open_mock().write.assert_called_with(report_str)
+
+    @patch('zapv2.context.new_context')
+    def test_new_context(self, context_mock):
+        """Test creating a new context."""
+        self.zap_helper.new_context('Test')
+        context_mock.assert_called_with(contextname='Test', apikey=self.api_key)
+
+    @patch('zapv2.context.include_in_context')
+    def test_include_in_context(self, context_mock):
+        """Test adding a regex for URLs to include in the context."""
+        include_pattern = r"\/zapcli.+"
+        context_name = 'Test'
+        context_mock.return_value = 'OK'
+
+        self.zap_helper.include_in_context(context_name, include_pattern)
+
+        context_mock.assert_called_with(contextname=context_name, regex=include_pattern, apikey=self.api_key)
+
+    @patch('zapv2.context.include_in_context')
+    def test_include_in_context_return_error(self, context_mock):
+        """Test that an error is raised when the API returns an unexpected response."""
+        include_pattern = r"\/zapcli.+"
+        context_name = 'Test'
+        context_mock.return_value = 'Error'
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.include_in_context(context_name, include_pattern)
+
+    def test_include_in_context_regex_error(self):
+        """Test that an error is raised when an invalid regex is supplied."""
+        include_pattern = '['
+        context_name = 'Test'
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.include_in_context(context_name, include_pattern)
+
+    @patch('zapv2.context.exclude_from_context')
+    def test_exclude_from_context(self, context_mock):
+        """Test adding a regex for URLs to exclude from the context."""
+        exclude_pattern = r"\/zapcli.+"
+        context_name = 'Test'
+        context_mock.return_value = 'OK'
+
+        self.zap_helper.exclude_from_context(context_name, exclude_pattern)
+
+        context_mock.assert_called_with(contextname=context_name, regex=exclude_pattern, apikey=self.api_key)
+
+    @patch('zapv2.context.exclude_from_context')
+    def test_exclude_from_context_return_error(self, context_mock):
+        """Test that an error is raised when the API returns an unexpected response."""
+        exclude_pattern = r"\/zapcli.+"
+        context_name = 'Test'
+        context_mock.return_value = 'Error'
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.exclude_from_context(context_name, exclude_pattern)
+
+    def test_exclude_from_context_regex_error(self):
+        """Test that an error is raised when an invalid regex is supplied."""
+        exclude_pattern = '['
+        context_name = 'Test'
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.exclude_from_context(context_name, exclude_pattern)
+
+    @patch('zapv2.context.import_context')
+    def test_import_context(self, context_mock):
+        """Test importing a context."""
+        file_path = '/tmp/Test'
+        context_mock.return_value = '1'
+
+        self.zap_helper.import_context(file_path)
+
+        context_mock.assert_called_with(file_path, apikey=self.api_key)
+
+    @patch('zapv2.context.import_context')
+    def test_import_context_return_error(self, context_mock):
+        """Test that an error is raised when the API returns an unexpected response."""
+        file_path = '/tmp/Test'
+        context_mock.return_value = 'Error'
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.import_context(file_path)
+
+    @patch('zapv2.context.export_context')
+    def test_export_context(self, context_mock):
+        """Test exporting a context."""
+        file_path = '/tmp/Test'
+        context_name = 'Test'
+        context_mock.return_value = 'OK'
+
+        self.zap_helper.export_context(context_name, file_path)
+
+        context_mock.assert_called_with(context_name, file_path, apikey=self.api_key)
+
+    @patch('zapv2.context.export_context')
+    def test_export_context_return_error(self, context_mock):
+        """Test that an error is raised when the API returns an unexpected response."""
+        file_path = '/tmp/Test'
+        context_name = 'Test'
+        context_mock.return_value = 'Error'
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.export_context(context_name, file_path)
 
 
 if __name__ == '__main__':
