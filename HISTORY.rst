@@ -1,6 +1,11 @@
 Release History
 ===============
 
+v0.9.0 (2017-11-01)
+-------------------
+* Add commands to manage contexts as well as options to run the spider,
+  active scan, and quick scan while authenticated as a user. (#7)
+
 v0.8.1 (2017-07-20)
 -------------------
 * Upgrade python-owasp-zap-v2.4 dependency to 0.0.11
