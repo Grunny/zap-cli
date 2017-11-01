@@ -106,7 +106,7 @@ def open_url(zap_helper, url):
 @click.argument('url')
 @click.option('--context-name', '-c', type=str, help='Context to use if provided.')
 @click.option('--user-name', '-u', type=str,
-              help='User to run scan as if provided. If this option is used, the context parameter must also ' +
+              help='Run scan as this user if provided. If this option is used, the context parameter must also ' +
               'be provided.')
 @click.pass_obj
 def spider_url(zap_helper, url, context_name, user_name):
@@ -134,7 +134,7 @@ def ajax_spider_url(zap_helper, url):
 @click.option('--recursive', '-r', is_flag=True, default=False, help='Make scan recursive.')
 @click.option('--context-name', '-c', type=str, help='Context to use if provided.')
 @click.option('--user-name', '-u', type=str,
-              help='User to run scan as if provided. If this option is used, the context parameter must also ' +
+              help='Run scan as this user if provided. If this option is used, the context parameter must also ' +
               'be provided.')
 @click.pass_obj
 def active_scan(zap_helper, url, scanners, recursive, context_name, user_name):
@@ -194,7 +194,7 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
               help='Output format to print the alerts.')
 @click.option('--context-name', '-c', type=str, help='Context to use if provided.')
 @click.option('--user-name', '-u', type=str,
-              help='User to run scan as if provided. If this option is used, the context parameter must also ' +
+              help='Run scan as this user if provided. If this option is used, the context parameter must also ' +
               'be provided.')
 @click.pass_obj
 def quick_scan(zap_helper, url, **options):

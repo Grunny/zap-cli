@@ -163,3 +163,35 @@ Or to run the same scan with the API key disabled:
 ::
 
     $ zap-cli quick-scan -sc -o '-config api.disablekey=true' -s xss http://127.0.0.1/
+
+Running scans as authenticated users
+------------------------------------
+In order to run a scan as an authenticated user, first configure the authentication method and users for
+a context using the ZAP UI (see the `ZAP help page <https://github.com/zaproxy/zap-core-help/wiki/HelpStartConceptsAuthentication>`_
+for more information). Once the authentication method and users are prepared, you can then export the context
+with the configured authentication method so it can be imported and used to run authenticated scans with ZAP CLI.
+
+You can export a context with the authentication method and users configured either through the ZAP UI or using the
+``context export`` ZAP CLI command. For example, to export a context with the name DevTest to a file, you could run:
+
+::
+
+    $ zap-cli context export --name DevTest --file-path /home/user/DevTest.context
+
+To import the saved context for use with ZAP CLI later, you could run:
+
+::
+
+    $ zap-cli context import /home/user/DevTest.context
+
+After importing the context with the configured authentication method and users, you can then provide the context name
+and user name to the ``spider``, ``active-scan``, and ``quick-scan`` commands to run the scans while authenticated as
+the given user. For example:
+
+::
+
+    $ zap-cli context import /home/user/DevTest.context
+    $ zap-cli open-url "http://localhost/"
+    $ zap-cli spider --context-name DevTest --user-name SomeUser "http://localhost"
+    $ zap-cli active-scan --recursive -c DevTest -u SomeUser "http://localhost"
+    $ zap-cli quick-scan --recursive --spider -c DevTest -u SomeUser "http://localhost"
