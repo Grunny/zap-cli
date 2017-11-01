@@ -4,4 +4,4 @@ A ZAP CLI tool for targeted tests from the command line.
 .. moduleauthor:: Daniel Grunwell (grunny)
 """
 
-__version__ = '0.8.1'
+__version__ = '0.9.0'
