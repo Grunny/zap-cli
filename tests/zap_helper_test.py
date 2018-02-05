@@ -514,11 +514,75 @@ class ZAPHelperTestCase(unittest.TestCase):
         with self.assertRaises(ZAPError):
             self.zap_helper.set_enabled_scanners('invalid-group')
 
+    @patch('zapv2.ascan.set_scanner_attack_strength')
+    def test_set_scanner_attack_strength(self, set_strength_mock):
+        """Test successfully setting attack strength for scanners."""
+        set_strength_mock.return_value = 'OK'
+
+        self.zap_helper.set_scanner_attack_strength([0, 50000], 'High')
+        self.assertEqual(set_strength_mock.call_count, 2)
+
+    @patch('zapv2.ascan.set_scanner_attack_strength')
+    def test_set_scanner_attack_strength_error(self, set_strength_mock):
+        """Test that an error is raised when the API returns an unexpected response."""
+        set_strength_mock.return_value = 'Error'
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.set_scanner_attack_strength([0, 50000], 'Invalid')
+
+    @patch('zapv2.ascan.set_scanner_alert_threshold')
+    def test_set_scanner_alert_threshold(self, set_threshold_mock):
+        """Test successfully setting the alert threshold for scanners."""
+        set_threshold_mock.return_value = 'OK'
+
+        self.zap_helper.set_scanner_alert_threshold([0, 50000], 'High')
+        self.assertEqual(set_threshold_mock.call_count, 2)
+
+    @patch('zapv2.ascan.set_scanner_alert_threshold')
+    def test_set_scanner_alert_threshold_error(self, set_threshold_mock):
+        """Test that an error is raised when the API returns an unexpected response."""
+        set_threshold_mock.return_value = 'Error'
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.set_scanner_alert_threshold([0, 50000], 'Invalid')
+
     @patch('zapv2.ascan.set_enabled_policies')
     def test_enable_policies_by_ids(self, policies_mock):
         """Test enabling scanners by a list of IDs."""
         self.zap_helper.enable_policies_by_ids(['1', '5', '6'])
         policies_mock.assert_called_with('1,5,6', apikey=self.api_key)
+
+    @patch('zapv2.ascan.set_policy_attack_strength')
+    def test_set_policy_attack_strength(self, set_strength_mock):
+        """Test successfully setting attack strength for policies."""
+        set_strength_mock.return_value = 'OK'
+
+        self.zap_helper.set_policy_attack_strength([0, 4], 'High')
+        self.assertEqual(set_strength_mock.call_count, 2)
+
+    @patch('zapv2.ascan.set_policy_attack_strength')
+    def test_set_policy_attack_strength_error(self, set_strength_mock):
+        """Test that an error is raised when the API returns an unexpected response."""
+        set_strength_mock.return_value = 'Error'
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.set_policy_attack_strength([0, 4], 'Invalid')
+
+    @patch('zapv2.ascan.set_policy_alert_threshold')
+    def test_set_policy_alert_threshold(self, set_threshold_mock):
+        """Test successfully setting the alert threshold for scanners."""
+        set_threshold_mock.return_value = 'OK'
+
+        self.zap_helper.set_policy_alert_threshold([0, 4], 'High')
+        self.assertEqual(set_threshold_mock.call_count, 2)
+
+    @patch('zapv2.ascan.set_policy_alert_threshold')
+    def test_set_policy_alert_threshold_error(self, set_threshold_mock):
+        """Test that an error is raised when the API returns an unexpected response."""
+        set_threshold_mock.return_value = 'Error'
+
+        with self.assertRaises(ZAPError):
+            self.zap_helper.set_policy_alert_threshold([0, 4], 'Invalid')
 
     @patch('zapv2.core.exclude_from_proxy')
     @patch('zapv2.spider.exclude_from_scan')
