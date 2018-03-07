@@ -1,4 +1,4 @@
 FROM python:alpine
-LABEL maintainer=""
+LABEL maintainer="mwgrunny@gmail.com"
 ARG VERSION=0.9.0
 RUN pip install zapcli==$VERSION
