@@ -310,11 +310,47 @@ class ZAPHelper(object):
         self.zap.ascan.disable_all_scanners(apikey=self.api_key)
         self.enable_scanners(scanners)
 
+    def set_scanner_attack_strength(self, scanner_ids, attack_strength):
+        """Set the attack strength for the given scanners."""
+        for scanner_id in scanner_ids:
+            self.logger.debug('Setting strength for scanner {0} to {1}'.format(scanner_id, attack_strength))
+            result = self.zap.ascan.set_scanner_attack_strength(scanner_id, attack_strength,
+                                                                apikey=self.api_key)
+            if result != 'OK':
+                raise ZAPError('Error setting strength for scanner with ID {0}: {1}'.format(scanner_id, result))
+
+    def set_scanner_alert_threshold(self, scanner_ids, alert_threshold):
+        """Set the alert theshold for the given policies."""
+        for scanner_id in scanner_ids:
+            self.logger.debug('Setting alert threshold for scanner {0} to {1}'.format(scanner_id, alert_threshold))
+            result = self.zap.ascan.set_scanner_alert_threshold(scanner_id, alert_threshold,
+                                                                apikey=self.api_key)
+            if result != 'OK':
+                raise ZAPError('Error setting alert threshold for scanner with ID {0}: {1}'.format(scanner_id, result))
+
     def enable_policies_by_ids(self, policy_ids):
         """Set enabled policy from a list of IDs."""
         policy_ids = ','.join(policy_ids)
         self.logger.debug('Setting enabled policies to IDs {0}'.format(policy_ids))
         self.zap.ascan.set_enabled_policies(policy_ids, apikey=self.api_key)
+
+    def set_policy_attack_strength(self, policy_ids, attack_strength):
+        """Set the attack strength for the given policies."""
+        for policy_id in policy_ids:
+            self.logger.debug('Setting strength for policy {0} to {1}'.format(policy_id, attack_strength))
+            result = self.zap.ascan.set_policy_attack_strength(policy_id, attack_strength,
+                                                               apikey=self.api_key)
+            if result != 'OK':
+                raise ZAPError('Error setting strength for policy with ID {0}: {1}'.format(policy_id, result))
+
+    def set_policy_alert_threshold(self, policy_ids, alert_threshold):
+        """Set the alert theshold for the given policies."""
+        for policy_id in policy_ids:
+            self.logger.debug('Setting alert threshold for policy {0} to {1}'.format(policy_id, alert_threshold))
+            result = self.zap.ascan.set_policy_alert_threshold(policy_id, alert_threshold,
+                                                               apikey=self.api_key)
+            if result != 'OK':
+                raise ZAPError('Error setting alert threshold for policy with ID {0}: {1}'.format(policy_id, result))
 
     def exclude_from_all(self, exclude_regex):
         """Exclude a pattern from proxy, spider and active scanner."""
