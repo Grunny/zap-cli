@@ -10,7 +10,7 @@ executing quick, targeted attacks.
 Installation
 ============
 
-To install the latest release from PyPI, you can run the following command:
+To install the latest release from PyPI, you can run the following command: 
 
 ::
 
