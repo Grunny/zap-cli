@@ -761,6 +761,23 @@ class ZAPHelperTestCase(unittest.TestCase):
             report_str = report_str.encode('utf-8')
         file_open_mock().write.assert_called_with(report_str)
 
+    @patch('zapv2.core.mdreport')
+    def test_md_report(self, mdreport_mock):
+        """Test MD report."""
+        report_str = 'test_md_report'
+        mdreport_mock.return_value = report_str
+        file_path = 'foo.md'
+        file_open_mock = mock_open()
+
+        with patch('zapcli.zap_helper.open', file_open_mock, create=True):
+            self.zap_helper.md_report(file_path)
+
+        mdreport_mock.assert_called_with(apikey=self.api_key)
+        file_open_mock.assert_called_with(file_path, mode='wb')
+        if not isinstance(report_str, binary_type):
+            report_str = report_str.encode('utf-8')
+        file_open_mock().write.assert_called_with(report_str)
+
     @patch('zapv2.core.htmlreport')
     def test_html_report(self, htmlreport_mock):
         """Test HTML report."""

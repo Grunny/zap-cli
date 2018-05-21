@@ -435,6 +435,12 @@ class ZAPHelper(object):
         report = self.zap.core.xmlreport(apikey=self.api_key)
         self._write_report(report, file_path)
 
+    def md_report(self, file_path):
+        """Generate and save MD report"""
+        self.logger.debug('Generating MD report')
+        report = self.zap.core.mdreport(apikey=self.api_key)
+        self._write_report(report, file_path)
+
     def html_report(self, file_path):
         """Generate and save HTML report."""
         self.logger.debug('Generating HTML report')

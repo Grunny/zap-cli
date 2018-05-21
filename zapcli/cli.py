@@ -254,13 +254,15 @@ def exclude_from_scanners(zap_helper, pattern):
 
 @cli.command('report')
 @click.option('--output', '-o', help='Output file for report.')
-@click.option('--output-format', '-f', default='xml', type=click.Choice(['xml', 'html']),
+@click.option('--output-format', '-f', default='xml', type=click.Choice(['xml', 'html', 'md']),
               help='Report format.')
 @click.pass_obj
 def report(zap_helper, output, output_format):
-    """Generate XML or HTML report."""
+    """Generate XML, MD or HTML report."""
     if output_format == 'html':
         zap_helper.html_report(output)
+    elif output_format == 'md':
+        zap_helper.md_report(output)
     else:
         zap_helper.xml_report(output)
 
