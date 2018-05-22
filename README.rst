@@ -10,7 +10,7 @@ executing quick, targeted attacks.
 Installation
 ============
 
-To install the latest release from PyPI, you can run the following command:
+To install the latest release from PyPI, you can run the following command: 
 
 ::
 
@@ -67,7 +67,7 @@ ZAP CLI can then be used with the following commands:
       open-url     Open a URL using the ZAP proxy.
       policies     Enable or list a set of policies.
       quick-scan   Run a quick scan.
-      report       Generate XML or HTML report.
+      report       Generate XML, MD or HTML report.
       scanners     Enable, disable, or list a set of scanners.
       scripts      Manage scripts.
       session      Manage sessions.

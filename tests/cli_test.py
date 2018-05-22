@@ -303,6 +303,14 @@ class ZAPCliTestCase(unittest.TestCase):
         report_mock.assert_called_with('foo.xml')
         self.assertEqual(result.exit_code, 0)
 
+    @patch('zapcli.zap_helper.ZAPHelper.md_report')
+    def test_md_report(self, report_mock):
+        """Testing MD report."""
+        result = self.runner.invoke(cli.cli,
+                                    ['report', '-o', 'foo.md', '-f', 'md'])
+        report_mock.assert_called_with('foo.md')
+        self.assertEqual(result.exit_code, 0)
+
     @patch('zapcli.zap_helper.ZAPHelper.html_report')
     def test_html_report(self, report_mock):
         """Testing HTML report."""
