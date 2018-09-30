@@ -40,7 +40,7 @@ class ZAPHelper(object):
     timeout = 60
     _status_check_sleep = 10
 
-    def __init__(self, zap_path='', port=8090, url='http://127.0.0.1', api_key='', logger=None):
+    def __init__(self, zap_path='', port=8090, url='http://127.0.0.1', api_key='', log_path=None, logger=None):
         if os.path.isfile(zap_path):
             zap_path = os.path.dirname(zap_path)
         self.zap_path = zap_path
@@ -48,6 +48,7 @@ class ZAPHelper(object):
         self.proxy_url = '{0}:{1}'.format(url, self.port)
         self.zap = ZAPv2(proxies={'http': self.proxy_url, 'https': self.proxy_url}, apikey=api_key)
         self.api_key = api_key
+        self.log_path = log_path
         self.logger = logger or console
 
     @property
@@ -77,7 +78,10 @@ class ZAPHelper(object):
             extra_options = shlex.split(options)
             zap_command += extra_options
 
-        log_path = os.path.join(self.zap_path, 'zap.log')
+        if self.log_path == None:
+            log_path = os.path.join(self.zap_path, 'zap.log')
+        else:
+            log_path = os.path.join(self.log_path, 'zap.log')
 
         self.logger.debug('Starting ZAP process with command: {0}.'.format(' '.join(zap_command)))
         self.logger.debug('Logging to {0}'.format(log_path))
