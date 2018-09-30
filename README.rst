@@ -10,7 +10,7 @@ executing quick, targeted attacks.
 Installation
 ============
 
-To install the latest release from PyPI, you can run the following command: 
+To install the latest release from PyPI, you can run the following command:
 
 ::
 
@@ -56,6 +56,8 @@ ZAP CLI can then be used with the following commands:
                           or the value of the environment variable ZAP_URL.
       --api-key TEXT      The API key for using the ZAP API if required. Defaults
                           to the value of the environment variable ZAP_API_KEY.
+      --log-path TEXT     Path to a directory where to write the ZAP output
+                          logfile. Defaults to the value of --zap-path.
       --help              Show this message and exit.
 
     Commands:
