@@ -78,7 +78,7 @@ class ZAPHelper(object):
             extra_options = shlex.split(options)
             zap_command += extra_options
 
-        if self.log_path == None:
+        if self.log_path is None:
             log_path = os.path.join(self.zap_path, 'zap.log')
         else:
             log_path = os.path.join(self.log_path, 'zap.log')
