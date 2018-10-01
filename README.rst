@@ -56,8 +56,10 @@ ZAP CLI can then be used with the following commands:
                           or the value of the environment variable ZAP_URL.
       --api-key TEXT      The API key for using the ZAP API if required. Defaults
                           to the value of the environment variable ZAP_API_KEY.
-      --log-path TEXT     Path to a directory where to write the ZAP output
-                          logfile. Defaults to the value of --zap-path.
+      --log-path TEXT     Path to the directory in which to save the ZAP output
+                          log file. Defaults to the value of the environment
+                          variable ZAP_LOG_PATH and uses the value of --zap-path
+                          if it is not set.
       --help              Show this message and exit.
 
     Commands:

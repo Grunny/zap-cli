@@ -32,7 +32,8 @@ from zapcli.zap_helper import ZAPHelper
               help='The API key for using the ZAP API if required. Defaults to the value of the environment ' +
               'variable ZAP_API_KEY.')
 @click.option('--log-path', envvar='ZAP_LOG_PATH', type=str,
-              help='Path to a directory where to write the ZAP output logfile. Defaults to the value of --zap-path.')
+              help='Path to the directory in which to save the ZAP output log file. Defaults to the value of ' +
+              'the environment variable ZAP_LOG_PATH and uses the value of --zap-path if it is not set.')
 @click.pass_context
 def cli(ctx, boring, verbose, zap_path, port, zap_url, api_key, log_path):
     """Main command line entry point."""
