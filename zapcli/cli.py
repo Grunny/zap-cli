@@ -31,8 +31,11 @@ from zapcli.zap_helper import ZAPHelper
 @click.option('--api-key', default='', envvar='ZAP_API_KEY', type=str,
               help='The API key for using the ZAP API if required. Defaults to the value of the environment ' +
               'variable ZAP_API_KEY.')
+@click.option('--log-path', envvar='ZAP_LOG_PATH', type=str,
+              help='Path to the directory in which to save the ZAP output log file. Defaults to the value of ' +
+              'the environment variable ZAP_LOG_PATH and uses the value of --zap-path if it is not set.')
 @click.pass_context
-def cli(ctx, boring, verbose, zap_path, port, zap_url, api_key):
+def cli(ctx, boring, verbose, zap_path, port, zap_url, api_key, log_path):
     """Main command line entry point."""
     console.colorize = not boring
 
@@ -41,7 +44,7 @@ def cli(ctx, boring, verbose, zap_path, port, zap_url, api_key):
     else:
         console.setLevel('INFO')
 
-    ctx.obj = ZAPHelper(zap_path=zap_path, port=port, url=zap_url, api_key=api_key)
+    ctx.obj = ZAPHelper(zap_path=zap_path, port=port, url=zap_url, api_key=api_key, log_path=log_path)
 
 
 @cli.command('start', short_help='Start the ZAP daemon.')
