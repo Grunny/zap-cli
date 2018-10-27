@@ -7,14 +7,12 @@ Tests for the ZAP CLI helper.
 import shlex
 import subprocess
 import unittest
-from six import binary_type
 
 from ddt import ddt, data, unpack
 from mock import PropertyMock, Mock, MagicMock, mock_open, patch
-import requests
 from requests.exceptions import ConnectionError
 import responses
-import six
+from six import binary_type
 
 from zapcli import zap_helper
 from zapcli.exceptions import ZAPError
@@ -23,10 +21,9 @@ from zapcli.exceptions import ZAPError
 @ddt
 class ZAPHelperTestCase(unittest.TestCase):
     """Test ZAP Helper methods."""
-    api_key = '123'
 
     def setUp(self):
-        self.zap_helper = zap_helper.ZAPHelper(api_key=self.api_key)
+        self.zap_helper = zap_helper.ZAPHelper()
         self.zap_helper._status_check_sleep = 0
 
     @data(
@@ -421,7 +418,7 @@ class ZAPHelperTestCase(unittest.TestCase):
     def test_enable_scanners_by_group(self, ascan_mock):
         """Test enabling a scanners by group name."""
         self.zap_helper.enable_scanners_by_group('xss')
-        ascan_mock.assert_called_with(','.join(self.zap_helper.scanner_group_map['xss']), apikey=self.api_key)
+        ascan_mock.assert_called_with(','.join(self.zap_helper.scanner_group_map['xss']))
 
     @patch('zapv2.ascan.enable_all_scanners')
     def test_enable_scanners_by_group_all(self, ascan_mock):
@@ -441,7 +438,7 @@ class ZAPHelperTestCase(unittest.TestCase):
     def test_disable_scanners_by_group(self, ascan_mock):
         """Test disabling a scanners by group name."""
         self.zap_helper.disable_scanners_by_group('xss')
-        ascan_mock.assert_called_with(','.join(self.zap_helper.scanner_group_map['xss']), apikey=self.api_key)
+        ascan_mock.assert_called_with(','.join(self.zap_helper.scanner_group_map['xss']))
 
     @patch('zapv2.ascan.disable_all_scanners')
     def test_disable_scanners_by_group_all(self, ascan_mock):
@@ -465,8 +462,8 @@ class ZAPHelperTestCase(unittest.TestCase):
 
         self.assertFalse(enable_all_mock.called)
         self.assertEqual(enable_mock.call_count, 2)
-        enable_mock.assert_any_call(','.join(self.zap_helper.scanner_group_map['xss']), apikey=self.api_key)
-        enable_mock.assert_any_call('0,50000', apikey=self.api_key)
+        enable_mock.assert_any_call(','.join(self.zap_helper.scanner_group_map['xss']))
+        enable_mock.assert_any_call('0,50000')
 
     @patch('zapv2.ascan.enable_all_scanners')
     @patch('zapv2.ascan.enable_scanners')
@@ -483,8 +480,8 @@ class ZAPHelperTestCase(unittest.TestCase):
 
         self.assertFalse(disable_all_mock.called)
         self.assertEqual(disable_mock.call_count, 2)
-        disable_mock.assert_any_call(','.join(self.zap_helper.scanner_group_map['xss']), apikey=self.api_key)
-        disable_mock.assert_any_call('0,50000', apikey=self.api_key)
+        disable_mock.assert_any_call(','.join(self.zap_helper.scanner_group_map['xss']))
+        disable_mock.assert_any_call('0,50000')
 
     @patch('zapv2.ascan.disable_all_scanners')
     @patch('zapv2.ascan.disable_scanners')
@@ -503,8 +500,8 @@ class ZAPHelperTestCase(unittest.TestCase):
         self.assertTrue(disable_mock.called)
         self.assertFalse(enable_all_mock.called)
         self.assertEqual(enable_mock.call_count, 2)
-        enable_mock.assert_any_call(','.join(self.zap_helper.scanner_group_map['xss']), apikey=self.api_key)
-        enable_mock.assert_any_call('0,50000', apikey=self.api_key)
+        enable_mock.assert_any_call(','.join(self.zap_helper.scanner_group_map['xss']))
+        enable_mock.assert_any_call('0,50000')
 
     @patch('zapv2.ascan.disable_all_scanners')
     @patch('zapv2.ascan.enable_all_scanners')
@@ -550,7 +547,7 @@ class ZAPHelperTestCase(unittest.TestCase):
     def test_enable_policies_by_ids(self, policies_mock):
         """Test enabling scanners by a list of IDs."""
         self.zap_helper.enable_policies_by_ids(['1', '5', '6'])
-        policies_mock.assert_called_with('1,5,6', apikey=self.api_key)
+        policies_mock.assert_called_with('1,5,6')
 
     @patch('zapv2.ascan.set_policy_attack_strength')
     def test_set_policy_attack_strength(self, set_strength_mock):
@@ -593,9 +590,9 @@ class ZAPHelperTestCase(unittest.TestCase):
 
         self.zap_helper.exclude_from_all(exclude_pattern)
 
-        core_mock.assert_called_with(exclude_pattern, apikey=self.api_key)
-        spider_mock.assert_called_with(exclude_pattern, apikey=self.api_key)
-        ascan_mock.assert_called_with(exclude_pattern, apikey=self.api_key)
+        core_mock.assert_called_with(exclude_pattern)
+        spider_mock.assert_called_with(exclude_pattern)
+        ascan_mock.assert_called_with(exclude_pattern)
 
     def test_exclude_from_all_raises_eror(self):
         """
@@ -605,144 +602,6 @@ class ZAPHelperTestCase(unittest.TestCase):
         exclude_pattern = '['
         with self.assertRaises(ZAPError):
             self.zap_helper.exclude_from_all(exclude_pattern)
-
-    @patch('zapv2.core.new_session')
-    def test_new_session(self, session_mock):
-        """Test starting a new session."""
-        self.zap_helper.new_session()
-        session_mock.assert_called_with(apikey=self.api_key)
-
-    @patch('zapv2.core.save_session')
-    def test_save_session(self, session_mock):
-        """Test saving the current session."""
-        file_path = '/path/to/zap'
-        self.zap_helper.save_session(file_path)
-        session_mock.assert_called_with(file_path, overwrite='true', apikey=self.api_key)
-
-    @patch('os.path.isfile')
-    @patch('zapv2.core.load_session')
-    def test_load_session(self, session_mock, isfile_mock):
-        """Test loading a given session."""
-        isfile_mock.return_value = True
-        file_path = '/path/to/zap'
-        self.zap_helper.load_session(file_path)
-        session_mock.assert_called_with(file_path, apikey=self.api_key)
-
-    @patch('zapv2.script.enable')
-    def test_enable_script(self, script_mock):
-        """Test enabling a script."""
-        script_name = 'Foo.js'
-        script_mock.return_value = 'OK'
-        self.zap_helper.enable_script(script_name)
-        script_mock.assert_called_with(script_name, apikey=self.api_key)
-
-    @patch('zapv2.script.enable')
-    def test_enable_script_error(self, script_mock):
-        """Test an error is raised when failing to enable a script."""
-        script_name = 'Foo.js'
-        script_mock.return_value = 'Does Not Exist'
-        with self.assertRaises(ZAPError):
-            self.zap_helper.enable_script(script_name)
-
-    @patch('zapv2.script.disable')
-    def test_disable_script(self, script_mock):
-        """Test disabling a script."""
-        script_name = 'Foo.js'
-        script_mock.return_value = 'OK'
-        self.zap_helper.disable_script(script_name)
-        script_mock.assert_called_with(script_name, apikey=self.api_key)
-
-    @patch('zapv2.script.disable')
-    def test_disable_script_error(self, script_mock):
-        """Test an error is raised when failing to disable a script."""
-        script_name = 'Foo.js'
-        script_mock.return_value = 'Does Not Exist'
-        with self.assertRaises(ZAPError):
-            self.zap_helper.disable_script(script_name)
-
-    @patch('zapv2.script.remove')
-    def test_remove_script(self, script_mock):
-        """Test removing a script."""
-        script_name = 'Foo.js'
-        script_mock.return_value = 'OK'
-        self.zap_helper.remove_script(script_name)
-        script_mock.assert_called_with(script_name, apikey=self.api_key)
-
-    @patch('zapv2.script.remove')
-    def test_remove_script_error(self, script_mock):
-        """Test an error is raised when failing to remove a script."""
-        script_name = 'Foo.js'
-        script_mock.return_value = 'Does Not Exist'
-        with self.assertRaises(ZAPError):
-            self.zap_helper.remove_script(script_name)
-
-    @patch('os.path.isfile')
-    def test_load_script(self, isfile_mock):
-        """Test loading a script from a file."""
-        isfile_mock.return_value = True
-
-        valid_engines = ['ECMAScript : Oracle Nashorn']
-        class_mock = MagicMock()
-        class_mock.load.return_value = 'OK'
-        engines = PropertyMock(return_value=valid_engines)
-        type(class_mock).list_engines = engines
-        self.zap_helper.zap.script = class_mock
-
-        script_name = 'Foo.js'
-        script_type = 'proxy'
-        engine = 'Oracle Nashorn'
-
-        self.zap_helper.load_script(script_name, script_type, engine, script_name)
-        class_mock.load.assert_called_with(script_name, script_type, engine, script_name,
-                                           scriptdescription='', apikey=self.api_key)
-
-    @patch('os.path.isfile')
-    def test_load_script_file_error(self, isfile_mock):
-        """Test loading a script from a file that does not exist."""
-        isfile_mock.return_value = False
-        with self.assertRaises(ZAPError):
-            self.zap_helper.load_script('Foo.js', 'proxy', 'Oracle Nashorn', '/path/to/Foo.js')
-
-    @patch('os.path.isfile')
-    def test_load_script_engine_error(self, isfile_mock):
-        """Test loading a script using an invalid engine."""
-        isfile_mock.return_value = True
-
-        valid_engines = ['ECMAScript : Oracle Nashorn']
-        class_mock = MagicMock()
-        engines = PropertyMock(return_value=valid_engines)
-        type(class_mock).list_engines = engines
-        self.zap_helper.zap.script = class_mock
-
-        with self.assertRaises(ZAPError):
-            self.zap_helper.load_script('Foo.js', 'proxy', 'Invalid Engine', '/path/to/Foo.js')
-
-    @patch('os.path.isfile')
-    def test_load_script_unknown_error(self, isfile_mock):
-        """Test loading a script with an unknown error returned."""
-        isfile_mock.return_value = True
-
-        valid_engines = ['ECMAScript : Oracle Nashorn']
-        class_mock = MagicMock()
-        class_mock.load.return_value = 'Internal Error'
-        engines = PropertyMock(return_value=valid_engines)
-        type(class_mock).list_engines = engines
-        self.zap_helper.zap.script = class_mock
-
-        with self.assertRaises(ZAPError):
-            self.zap_helper.load_script('Foo.js', 'proxy', 'Oracle Nashorn', '/path/to/Foo.js')
-
-    @patch('os.path.isfile')
-    @patch('zapv2.core.load_session')
-    def test_load_session_error(self, session_mock, isfile_mock):
-        """
-        Test loading a given session raises an error if the file
-        doesn't exist.
-        """
-        isfile_mock.return_value = False
-        file_path = '/path/to/zap'
-        with self.assertRaises(ZAPError):
-            self.zap_helper.load_session(file_path)
 
     @patch('zapv2.core.xmlreport')
     def test_xml_report(self, xmlreport_mock):
@@ -755,7 +614,7 @@ class ZAPHelperTestCase(unittest.TestCase):
         with patch('zapcli.zap_helper.open', file_open_mock, create=True):
             self.zap_helper.xml_report(file_path)
 
-        xmlreport_mock.assert_called_with(apikey=self.api_key)
+        xmlreport_mock.assert_called_with()
         file_open_mock.assert_called_with(file_path, mode='wb')
         if not isinstance(report_str, binary_type):
             report_str = report_str.encode('utf-8')
@@ -772,7 +631,7 @@ class ZAPHelperTestCase(unittest.TestCase):
         with patch('zapcli.zap_helper.open', file_open_mock, create=True):
             self.zap_helper.md_report(file_path)
 
-        mdreport_mock.assert_called_with(apikey=self.api_key)
+        mdreport_mock.assert_called_with()
         file_open_mock.assert_called_with(file_path, mode='wb')
         if not isinstance(report_str, binary_type):
             report_str = report_str.encode('utf-8')
@@ -789,115 +648,11 @@ class ZAPHelperTestCase(unittest.TestCase):
         with patch('zapcli.zap_helper.open', file_open_mock, create=True):
             self.zap_helper.html_report(file_path)
 
-        htmlreport_mock.assert_called_with(apikey=self.api_key)
+        htmlreport_mock.assert_called_with()
         file_open_mock.assert_called_with(file_path, mode='wb')
         if not isinstance(report_str, binary_type):
             report_str = report_str.encode('utf-8')
         file_open_mock().write.assert_called_with(report_str)
-
-    @patch('zapv2.context.new_context')
-    def test_new_context(self, context_mock):
-        """Test creating a new context."""
-        self.zap_helper.new_context('Test')
-        context_mock.assert_called_with(contextname='Test', apikey=self.api_key)
-
-    @patch('zapv2.context.include_in_context')
-    def test_include_in_context(self, context_mock):
-        """Test adding a regex for URLs to include in the context."""
-        include_pattern = r"\/zapcli.+"
-        context_name = 'Test'
-        context_mock.return_value = 'OK'
-
-        self.zap_helper.include_in_context(context_name, include_pattern)
-
-        context_mock.assert_called_with(contextname=context_name, regex=include_pattern, apikey=self.api_key)
-
-    @patch('zapv2.context.include_in_context')
-    def test_include_in_context_return_error(self, context_mock):
-        """Test that an error is raised when the API returns an unexpected response."""
-        include_pattern = r"\/zapcli.+"
-        context_name = 'Test'
-        context_mock.return_value = 'Error'
-
-        with self.assertRaises(ZAPError):
-            self.zap_helper.include_in_context(context_name, include_pattern)
-
-    def test_include_in_context_regex_error(self):
-        """Test that an error is raised when an invalid regex is supplied."""
-        include_pattern = '['
-        context_name = 'Test'
-
-        with self.assertRaises(ZAPError):
-            self.zap_helper.include_in_context(context_name, include_pattern)
-
-    @patch('zapv2.context.exclude_from_context')
-    def test_exclude_from_context(self, context_mock):
-        """Test adding a regex for URLs to exclude from the context."""
-        exclude_pattern = r"\/zapcli.+"
-        context_name = 'Test'
-        context_mock.return_value = 'OK'
-
-        self.zap_helper.exclude_from_context(context_name, exclude_pattern)
-
-        context_mock.assert_called_with(contextname=context_name, regex=exclude_pattern, apikey=self.api_key)
-
-    @patch('zapv2.context.exclude_from_context')
-    def test_exclude_from_context_return_error(self, context_mock):
-        """Test that an error is raised when the API returns an unexpected response."""
-        exclude_pattern = r"\/zapcli.+"
-        context_name = 'Test'
-        context_mock.return_value = 'Error'
-
-        with self.assertRaises(ZAPError):
-            self.zap_helper.exclude_from_context(context_name, exclude_pattern)
-
-    def test_exclude_from_context_regex_error(self):
-        """Test that an error is raised when an invalid regex is supplied."""
-        exclude_pattern = '['
-        context_name = 'Test'
-
-        with self.assertRaises(ZAPError):
-            self.zap_helper.exclude_from_context(context_name, exclude_pattern)
-
-    @patch('zapv2.context.import_context')
-    def test_import_context(self, context_mock):
-        """Test importing a context."""
-        file_path = '/tmp/Test'
-        context_mock.return_value = '1'
-
-        self.zap_helper.import_context(file_path)
-
-        context_mock.assert_called_with(file_path, apikey=self.api_key)
-
-    @patch('zapv2.context.import_context')
-    def test_import_context_return_error(self, context_mock):
-        """Test that an error is raised when the API returns an unexpected response."""
-        file_path = '/tmp/Test'
-        context_mock.return_value = 'Error'
-
-        with self.assertRaises(ZAPError):
-            self.zap_helper.import_context(file_path)
-
-    @patch('zapv2.context.export_context')
-    def test_export_context(self, context_mock):
-        """Test exporting a context."""
-        file_path = '/tmp/Test'
-        context_name = 'Test'
-        context_mock.return_value = 'OK'
-
-        self.zap_helper.export_context(context_name, file_path)
-
-        context_mock.assert_called_with(context_name, file_path, apikey=self.api_key)
-
-    @patch('zapv2.context.export_context')
-    def test_export_context_return_error(self, context_mock):
-        """Test that an error is raised when the API returns an unexpected response."""
-        file_path = '/tmp/Test'
-        context_name = 'Test'
-        context_mock.return_value = 'Error'
-
-        with self.assertRaises(ZAPError):
-            self.zap_helper.export_context(context_name, file_path)
 
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@ Helper methods for use by the CLI.
 
 from contextlib import contextmanager
 import json
+import re
 import sys
 
 import click
@@ -52,6 +53,21 @@ def validate_scanner_list(ctx, param, value):
                                      .format(scanner))
 
     return scanner_ids
+
+
+def validate_regex(ctx, param, value):
+    """
+    Validate that a provided regex compiles.
+    """
+    if not value:
+        return None
+
+    try:
+        re.compile(value)
+    except re.error:
+        raise click.BadParameter('Invalid regex "{0}" provided'.format(value))
+
+    return value
 
 
 @contextmanager

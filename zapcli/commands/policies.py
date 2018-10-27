@@ -51,7 +51,7 @@ def enable_policies(zap_helper, policy_ids):
     disabled.
     """
     if not policy_ids:
-        policies = _get_all_policy_ids(zap_helper)
+        policy_ids = _get_all_policy_ids(zap_helper)
 
     with zap_error_handler():
         zap_helper.enable_policies_by_ids(policy_ids)
@@ -67,7 +67,7 @@ def enable_policies(zap_helper, policy_ids):
 def set_policy_strength(zap_helper, policy_ids, strength):
     """Set the attack strength for policies."""
     if not policy_ids:
-        policies = _get_all_policy_ids(zap_helper)
+        policy_ids = _get_all_policy_ids(zap_helper)
 
     with zap_error_handler():
         zap_helper.set_policy_attack_strength(policy_ids, strength)
@@ -85,7 +85,7 @@ def set_policy_strength(zap_helper, policy_ids, strength):
 def set_policy_threshold(zap_helper, policy_ids, threshold):
     """Set the alert threshold for policies."""
     if not policy_ids:
-        policies = _get_all_policy_ids(zap_helper)
+        policy_ids = _get_all_policy_ids(zap_helper)
 
     with zap_error_handler():
         zap_helper.set_policy_alert_threshold(policy_ids, threshold)

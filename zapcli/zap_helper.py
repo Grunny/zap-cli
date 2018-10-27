@@ -101,7 +101,7 @@ class ZAPHelper(object):
             return
 
         self.logger.debug('Shutting down ZAP.')
-        self.zap.core.shutdown(apikey=self.api_key)
+        self.zap.core.shutdown()
 
         timeout_time = time.time() + self.timeout
         while self.is_running():
@@ -145,9 +145,9 @@ class ZAPHelper(object):
 
         if user_id:
             self.logger.debug('Running spider in context {0} as user {1}'.format(context_id, user_id))
-            scan_id = self.zap.spider.scan_as_user(context_id, user_id, target_url, apikey=self.api_key)
+            scan_id = self.zap.spider.scan_as_user(context_id, user_id, target_url)
         else:
-            scan_id = self.zap.spider.scan(target_url, apikey=self.api_key)
+            scan_id = self.zap.spider.scan(target_url)
 
         if not scan_id:
             raise ZAPError('Error running spider.')
@@ -170,9 +170,9 @@ class ZAPHelper(object):
 
         if user_id:
             self.logger.debug('Scanning in context {0} as user {1}'.format(context_id, user_id))
-            scan_id = self.zap.ascan.scan_as_user(target_url, context_id, user_id, recursive, apikey=self.api_key)
+            scan_id = self.zap.ascan.scan_as_user(target_url, context_id, user_id, recursive)
         else:
-            scan_id = self.zap.ascan.scan(target_url, recurse=recursive, apikey=self.api_key)
+            scan_id = self.zap.ascan.scan(target_url, recurse=recursive)
 
         if not scan_id:
             raise ZAPError('Error running active scan.')
@@ -193,7 +193,7 @@ class ZAPHelper(object):
         """Run AJAX Spider against a URL."""
         self.logger.debug('AJAX Spidering target {0}...'.format(target_url))
 
-        self.zap.ajaxSpider.scan(target_url, apikey=self.api_key)
+        self.zap.ajaxSpider.scan(target_url)
 
         while self.zap.ajaxSpider.status == 'running':
             self.logger.debug('AJAX Spider: {0}'.format(self.zap.ajaxSpider.status))
@@ -226,13 +226,13 @@ class ZAPHelper(object):
         """Enable a list of scanner IDs."""
         scanner_ids = ','.join(scanner_ids)
         self.logger.debug('Enabling scanners with IDs {0}'.format(scanner_ids))
-        return self.zap.ascan.enable_scanners(scanner_ids, apikey=self.api_key)
+        return self.zap.ascan.enable_scanners(scanner_ids)
 
     def disable_scanners_by_ids(self, scanner_ids):
         """Disable a list of scanner IDs."""
         scanner_ids = ','.join(scanner_ids)
         self.logger.debug('Disabling scanners with IDs {0}'.format(scanner_ids))
-        return self.zap.ascan.disable_scanners(scanner_ids, apikey=self.api_key)
+        return self.zap.ascan.disable_scanners(scanner_ids)
 
     def enable_scanners_by_group(self, group):
         """
@@ -240,7 +240,7 @@ class ZAPHelper(object):
         """
         if group == 'all':
             self.logger.debug('Enabling all scanners')
-            return self.zap.ascan.enable_all_scanners(apikey=self.api_key)
+            return self.zap.ascan.enable_all_scanners()
 
         try:
             scanner_list = self.scanner_group_map[group]
@@ -260,7 +260,7 @@ class ZAPHelper(object):
         """
         if group == 'all':
             self.logger.debug('Disabling all scanners')
-            return self.zap.ascan.disable_all_scanners(apikey=self.api_key)
+            return self.zap.ascan.disable_all_scanners()
 
         try:
             scanner_list = self.scanner_group_map[group]
@@ -311,15 +311,14 @@ class ZAPHelper(object):
         Set only the provided scanners by group and/or IDs and disable all others.
         """
         self.logger.debug('Disabling all current scanners')
-        self.zap.ascan.disable_all_scanners(apikey=self.api_key)
+        self.zap.ascan.disable_all_scanners()
         self.enable_scanners(scanners)
 
     def set_scanner_attack_strength(self, scanner_ids, attack_strength):
         """Set the attack strength for the given scanners."""
         for scanner_id in scanner_ids:
             self.logger.debug('Setting strength for scanner {0} to {1}'.format(scanner_id, attack_strength))
-            result = self.zap.ascan.set_scanner_attack_strength(scanner_id, attack_strength,
-                                                                apikey=self.api_key)
+            result = self.zap.ascan.set_scanner_attack_strength(scanner_id, attack_strength)
             if result != 'OK':
                 raise ZAPError('Error setting strength for scanner with ID {0}: {1}'.format(scanner_id, result))
 
@@ -327,8 +326,7 @@ class ZAPHelper(object):
         """Set the alert theshold for the given policies."""
         for scanner_id in scanner_ids:
             self.logger.debug('Setting alert threshold for scanner {0} to {1}'.format(scanner_id, alert_threshold))
-            result = self.zap.ascan.set_scanner_alert_threshold(scanner_id, alert_threshold,
-                                                                apikey=self.api_key)
+            result = self.zap.ascan.set_scanner_alert_threshold(scanner_id, alert_threshold)
             if result != 'OK':
                 raise ZAPError('Error setting alert threshold for scanner with ID {0}: {1}'.format(scanner_id, result))
 
@@ -336,14 +334,13 @@ class ZAPHelper(object):
         """Set enabled policy from a list of IDs."""
         policy_ids = ','.join(policy_ids)
         self.logger.debug('Setting enabled policies to IDs {0}'.format(policy_ids))
-        self.zap.ascan.set_enabled_policies(policy_ids, apikey=self.api_key)
+        self.zap.ascan.set_enabled_policies(policy_ids)
 
     def set_policy_attack_strength(self, policy_ids, attack_strength):
         """Set the attack strength for the given policies."""
         for policy_id in policy_ids:
             self.logger.debug('Setting strength for policy {0} to {1}'.format(policy_id, attack_strength))
-            result = self.zap.ascan.set_policy_attack_strength(policy_id, attack_strength,
-                                                               apikey=self.api_key)
+            result = self.zap.ascan.set_policy_attack_strength(policy_id, attack_strength)
             if result != 'OK':
                 raise ZAPError('Error setting strength for policy with ID {0}: {1}'.format(policy_id, result))
 
@@ -351,8 +348,7 @@ class ZAPHelper(object):
         """Set the alert theshold for the given policies."""
         for policy_id in policy_ids:
             self.logger.debug('Setting alert threshold for policy {0} to {1}'.format(policy_id, alert_threshold))
-            result = self.zap.ascan.set_policy_alert_threshold(policy_id, alert_threshold,
-                                                               apikey=self.api_key)
+            result = self.zap.ascan.set_policy_alert_threshold(policy_id, alert_threshold)
             if result != 'OK':
                 raise ZAPError('Error setting alert threshold for policy with ID {0}: {1}'.format(policy_id, result))
 
@@ -365,90 +361,26 @@ class ZAPHelper(object):
 
         self.logger.debug('Excluding {0} from proxy, spider and active scanner.'.format(exclude_regex))
 
-        self.zap.core.exclude_from_proxy(exclude_regex, apikey=self.api_key)
-        self.zap.spider.exclude_from_scan(exclude_regex, apikey=self.api_key)
-        self.zap.ascan.exclude_from_scan(exclude_regex, apikey=self.api_key)
-
-    def new_session(self):
-        """Start a new session."""
-        self.logger.debug('Starting a new session')
-        self.zap.core.new_session(apikey=self.api_key)
-
-    def save_session(self, file_path):
-        """Save the current session."""
-        self.logger.debug('Saving the session to "{0}"'.format(file_path))
-        self.zap.core.save_session(file_path, overwrite='true', apikey=self.api_key)
-
-    def load_session(self, file_path):
-        """Load a given session."""
-        if not os.path.isfile(file_path):
-            raise ZAPError('No file found at "{0}", cannot load session.'.format(file_path))
-        self.logger.debug('Loading session from "{0}"'.format(file_path))
-        self.zap.core.load_session(file_path, apikey=self.api_key)
-
-    def is_valid_script_engine(self, engine):
-        """Check if given script engine is valid."""
-        engine_names = self.zap.script.list_engines
-        short_names = [e.split(' : ')[1] for e in engine_names]
-
-        return engine in engine_names or engine in short_names
-
-    def enable_script(self, script_name):
-        """Enable a given script."""
-        self.logger.debug('Enabling script "{0}"'.format(script_name))
-        result = self.zap.script.enable(script_name, apikey=self.api_key)
-
-        if result != 'OK':
-            raise ZAPError('Error enabling script: {0}'.format(result))
-
-    def disable_script(self, script_name):
-        """Disable a given script."""
-        self.logger.debug('Disabling script "{0}"'.format(script_name))
-        result = self.zap.script.disable(script_name, apikey=self.api_key)
-
-        if result != 'OK':
-            raise ZAPError('Error disabling script: {0}'.format(result))
-
-    def remove_script(self, script_name):
-        """Remove a given script."""
-        self.logger.debug('Removing script "{0}"'.format(script_name))
-        result = self.zap.script.remove(script_name, apikey=self.api_key)
-
-        if result != 'OK':
-            raise ZAPError('Error removing script: {0}'.format(result))
-
-    def load_script(self, name, script_type, engine, file_path, description=''):
-        """Load a given script."""
-        if not os.path.isfile(file_path):
-            raise ZAPError('No file found at "{0}", cannot load script.'.format(file_path))
-
-        if not self.is_valid_script_engine(engine):
-            engines = self.zap.script.list_engines
-            raise ZAPError('Invalid script engine provided. Valid engines are: {0}'.format(', '.join(engines)))
-
-        self.logger.debug('Loading script "{0}" from "{1}"'.format(name, file_path))
-        result = self.zap.script.load(name, script_type, engine, file_path,
-                                      scriptdescription=description, apikey=self.api_key)
-
-        if result != 'OK':
-            raise ZAPError('Error loading script: {0}'.format(result))
+        self.zap.core.exclude_from_proxy(exclude_regex)
+        self.zap.spider.exclude_from_scan(exclude_regex)
+        self.zap.ascan.exclude_from_scan(exclude_regex)
 
     def xml_report(self, file_path):
         """Generate and save XML report"""
         self.logger.debug('Generating XML report')
-        report = self.zap.core.xmlreport(apikey=self.api_key)
+        report = self.zap.core.xmlreport()
         self._write_report(report, file_path)
 
     def md_report(self, file_path):
         """Generate and save MD report"""
         self.logger.debug('Generating MD report')
-        report = self.zap.core.mdreport(apikey=self.api_key)
+        report = self.zap.core.mdreport()
         self._write_report(report, file_path)
 
     def html_report(self, file_path):
         """Generate and save HTML report."""
         self.logger.debug('Generating HTML report')
-        report = self.zap.core.htmlreport(apikey=self.api_key)
+        report = self.zap.core.htmlreport()
         self._write_report(report, file_path)
 
     @staticmethod
@@ -459,34 +391,6 @@ class ZAPHelper(object):
                 report = report.encode('utf-8')
             f.write(report)
 
-    def new_context(self, context_name):
-        """Create a new context with the given name."""
-        return self.zap.context.new_context(contextname=context_name, apikey=self.api_key)
-
-    def include_in_context(self, context_name, regex):
-        """Add include regex to context."""
-        try:
-            re.compile(regex)
-        except re.error:
-            raise ZAPError('Invalid regex "{0}" provided'.format(regex))
-
-        result = self.zap.context.include_in_context(contextname=context_name, regex=regex, apikey=self.api_key)
-
-        if result != 'OK':
-            raise ZAPError('Including regex from context failed: {}'.format(result))
-
-    def exclude_from_context(self, context_name, regex):
-        """Add exclude regex to context."""
-        try:
-            re.compile(regex)
-        except re.error:
-            raise ZAPError('Invalid regex "{0}" provided'.format(regex))
-
-        result = self.zap.context.exclude_from_context(contextname=context_name, regex=regex, apikey=self.api_key)
-
-        if result != 'OK':
-            raise ZAPError('Excluding regex from context failed: {}'.format(result))
-
     def get_context_info(self, context_name):
         """Get the context ID for a given context name."""
         context_info = self.zap.context.context(context_name)
@@ -494,20 +398,6 @@ class ZAPHelper(object):
             raise ZAPError('Context with name "{0}" wasn\'t found'.format(context_name))
 
         return context_info
-
-    def import_context(self, file_path):
-        """Import a context from a file."""
-        result = self.zap.context.import_context(file_path, apikey=self.api_key)
-
-        if not result.isdigit():
-            raise ZAPError('Importing context from file failed: {}'.format(result))
-
-    def export_context(self, context_name, file_path):
-        """Export a given context to a file."""
-        result = self.zap.context.export_context(context_name, file_path, apikey=self.api_key)
-
-        if result != 'OK':
-            raise ZAPError('Exporting context to file failed: {}'.format(result))
 
     def _get_context_and_user_ids(self, context_name, user_name):
         """Helper to get the context ID and user ID from the given names."""

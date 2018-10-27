@@ -189,7 +189,8 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
 @click.option('--recursive', '-r', is_flag=True, default=False, help='Make scan recursive.')
 @click.option('--alert-level', '-l', default='High', type=click.Choice(ZAPHelper.alert_levels.keys()),
               help='Minimum alert level to include in report.')
-@click.option('--exclude', '-e', type=str, help='Regex to exclude from all aspects of the scan')
+@click.option('--exclude', '-e', type=str, callback=helpers.validate_regex,
+              help='Regex to exclude from all aspects of the scan')
 @click.option('--start-options', '-o', type=str,
               help='Extra options to pass to the ZAP start command when the --self-contained option is used, ' +
               ' e.g. "-config api.key=12345"')
@@ -247,7 +248,7 @@ def quick_scan(zap_helper, url, **options):
 
 
 @cli.command('exclude', short_help='Exclude a pattern from all scanners.')
-@click.argument('pattern')
+@click.argument('pattern', callback=helpers.validate_regex)
 @click.pass_obj
 def exclude_from_scanners(zap_helper, pattern):
     """Exclude a pattern from proxy, spider and active scanner."""
