@@ -6,7 +6,8 @@ Group of commands to manage the contexts for the current session.
 
 import click
 
-from zapcli.helpers import zap_error_handler
+from zapcli.exceptions import ZAPError
+from zapcli.helpers import validate_regex, zap_error_handler
 from zapcli.log import console
 
 
@@ -34,34 +35,40 @@ def context_list(zap_helper):
 def context_new(zap_helper, name):
     """Create a new context."""
     console.info('Creating context with name: {0}'.format(name))
-    res = zap_helper.new_context(name)
+    res = zap_helper.zap.context.new_context(contextname=name)
     console.info('Context "{0}" created with ID: {1}'.format(name, res))
 
 
 @context_group.command('include')
 @click.option('--name', '-n', type=str, required=True,
               help='Name of the context.')
-@click.option('--pattern', '-p', type=str,
+@click.option('--pattern', '-p', type=str, callback=validate_regex,
               help='Regex to include.')
 @click.pass_obj
 def context_include(zap_helper, name, pattern):
     """Include a pattern in a given context."""
     console.info('Including regex {0} in context with name: {1}'.format(pattern, name))
     with zap_error_handler():
-        zap_helper.include_in_context(name, pattern)
+        result = zap_helper.zap.context.include_in_context(contextname=name, regex=pattern)
+
+        if result != 'OK':
+            raise ZAPError('Including regex from context failed: {}'.format(result))
 
 
 @context_group.command('exclude')
 @click.option('--name', '-n', type=str, required=True,
               help='Name of the context.')
-@click.option('--pattern', '-p', type=str,
+@click.option('--pattern', '-p', type=str, callback=validate_regex,
               help='Regex to exclude.')
 @click.pass_obj
 def context_exclude(zap_helper, name, pattern):
     """Exclude a pattern from a given context."""
     console.info('Excluding regex {0} from context with name: {1}'.format(pattern, name))
     with zap_error_handler():
-        zap_helper.exclude_from_context(name, pattern)
+        result = zap_helper.zap.context.exclude_from_context(contextname=name, regex=pattern)
+
+        if result != 'OK':
+            raise ZAPError('Excluding regex from context failed: {}'.format(result))
 
 
 @context_group.command('info')
@@ -101,7 +108,10 @@ def context_list_users(zap_helper, context_name):
 def context_import(zap_helper, file_path):
     """Import a saved context file."""
     with zap_error_handler():
-        zap_helper.import_context(file_path)
+        result = zap_helper.zap.context.import_context(file_path)
+
+        if not result.isdigit():
+            raise ZAPError('Importing context from file failed: {}'.format(result))
 
     console.info('Imported context from {}'.format(file_path))
 
@@ -115,6 +125,9 @@ def context_import(zap_helper, file_path):
 def context_export(zap_helper, name, file_path):
     """Export a given context to a file."""
     with zap_error_handler():
-        zap_helper.export_context(name, file_path)
+        result = zap_helper.zap.context.export_context(name, file_path)
+
+        if result != 'OK':
+            raise ZAPError('Exporting context to file failed: {}'.format(result))
 
     console.info('Exported context {0} to {1}'.format(name, file_path))
