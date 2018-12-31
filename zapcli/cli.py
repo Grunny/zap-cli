@@ -93,7 +93,7 @@ def check_status(zap_helper, timeout):
             console.info('ZAP is running')
         else:
             console.error('ZAP is not running')
-            sys.exit(1)
+            sys.exit(2)
 
 
 @cli.command('open-url')
@@ -162,7 +162,8 @@ def active_scan(zap_helper, url, scanners, recursive, context_name, user_name):
 @click.option('--output-format', '-f', default='table', type=click.Choice(['table', 'json']),
               help='Output format to print the alerts.')
 @click.option('--exit-code', default=True, type=bool,
-              help='Whether to set the exit code to the number of alerts (default: True).')
+              help='Whether to set a non-zero exit code when there are any alerts of the specified ' +
+              'level (default: True).')
 @click.pass_obj
 def show_alerts(zap_helper, alert_level, output_format, exit_code):
     """Show alerts at the given alert level."""
@@ -171,8 +172,8 @@ def show_alerts(zap_helper, alert_level, output_format, exit_code):
     helpers.report_alerts(alerts, output_format)
 
     if exit_code:
-        num_alerts = len(alerts)
-        sys.exit(num_alerts)
+        code = 1 if len(alerts) > 0 else 0
+        sys.exit(code)
 
 
 @cli.command('quick-scan', short_help='Run a quick scan.')
@@ -208,6 +209,9 @@ def quick_scan(zap_helper, url, **options):
 
     This command contains most scan options as parameters, so you can do
     everything in one go.
+
+    If any alerts are found for the given alert level, this command will exit
+    with a status code of 1.
     """
     if options['self_contained']:
         console.info('Starting ZAP daemon')
@@ -235,8 +239,6 @@ def quick_scan(zap_helper, url, **options):
 
     alerts = zap_helper.alerts(options['alert_level'])
 
-    num_alerts = len(alerts)
-
     helpers.report_alerts(alerts, options['output_format'])
 
     if options['self_contained']:
@@ -244,7 +246,8 @@ def quick_scan(zap_helper, url, **options):
         with helpers.zap_error_handler():
             zap_helper.shutdown()
 
-    sys.exit(num_alerts)
+    exit_code = 1 if len(alerts) > 0 else 0
+    sys.exit(exit_code)
 
 
 @cli.command('exclude', short_help='Exclude a pattern from all scanners.')
