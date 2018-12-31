@@ -77,7 +77,7 @@ def zap_error_handler():
         yield
     except ZAPError as ex:
         console.error(str(ex))
-        sys.exit(1)
+        sys.exit(2)
 
 
 def report_alerts(alerts, output_format='table'):
