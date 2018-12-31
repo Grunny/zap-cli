@@ -1,6 +1,14 @@
 Release History
 ===============
 
+v0.10.0 (2018-12-31)
+--------------------
+* Change exit codes for alerts and quick-scan commands (#29)
+* Add ability to change the directory used for the log file (#62)
+* Add support for outputting markdown reports
+* Add ability to set the strength and threshold for policies and scanners
+* Upgrade python-owasp-zap-v2.4 dependency to 0.0.14
+
 v0.9.0 (2017-11-01)
 -------------------
 * Add commands to manage contexts as well as options to run the spider,
