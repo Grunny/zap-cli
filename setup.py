@@ -36,7 +36,7 @@ setup(
     install_requires=[
         'click==4.0',
         'python-owasp-zap-v2.4==0.0.14',
-        'requests==2.20.1',
+        'requests==2.31.0',
         'tabulate==0.7.5',
         'termcolor==1.1.0',
         'six==1.10.0',
